@@ -318,7 +318,7 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
               return;
             }
 
-            const msg = finalMessage as typeof message;
+            const msg = finalMessage;
 
             // Build metadata: merge any existing metadata + media info
             const metadata: Record<string, unknown> = { ...(msg.metadata ?? {}) };
@@ -327,28 +327,31 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
             }
 
             // Persist incoming message to DB (non-blocking but errors are now logged)
-            this.messageService.saveIncomingMessage(id, {
-              waMessageId: msg.id,
-              chatId: msg.chatId || msg.from,
-              from: msg.from,
-              // Ensure `to` is always a non-empty string (entity column is NOT NULL)
-              to: msg.to || '',
-              body: msg.body || '',
-              type: msg.type || 'text',
-              timestamp: msg.timestamp,
-              metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
-            }).then(() => {
-              this.logger.debug(`✅ Incoming message persisted to DB`, { sessionId: id, waMessageId: msg.id });
-            }).catch((dbErr: unknown) => {
-              this.logger.error(
-                `❌ Failed to persist incoming message to DB`,
-                dbErr instanceof Error ? dbErr.message : String(dbErr),
-                { sessionId: id, waMessageId: msg.id, from: msg.from },
-              );
-            });
+            this.messageService
+              .saveIncomingMessage(id, {
+                waMessageId: msg.id,
+                chatId: msg.chatId || msg.from,
+                from: msg.from,
+                // Ensure `to` is always a non-empty string (entity column is NOT NULL)
+                to: msg.to || '',
+                body: msg.body || '',
+                type: msg.type || 'text',
+                timestamp: msg.timestamp,
+                metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+              })
+              .then(() => {
+                this.logger.debug(`✅ Incoming message persisted to DB`, { sessionId: id, waMessageId: msg.id });
+              })
+              .catch((dbErr: unknown) => {
+                this.logger.error(
+                  `❌ Failed to persist incoming message to DB`,
+                  dbErr instanceof Error ? dbErr.message : String(dbErr),
+                  { sessionId: id, waMessageId: msg.id, from: msg.from },
+                );
+              });
 
             // Dispatch to webhooks
-            void this.webhookService.dispatch(id, 'message.received', finalMessage as Record<string, unknown>);
+            void this.webhookService.dispatch(id, 'message.received', finalMessage);
 
             // Emit real-time event to all WebSocket clients subscribed to this session
             // The payload includes direction so the frontend can render left/right correctly.

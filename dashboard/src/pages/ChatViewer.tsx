@@ -201,7 +201,18 @@ export function ChatViewer() {
     onMessage: (event) => {
       const currentSessionId = selectedSessionIdRef.current;
       const currentChat = activeChatRef.current;
-      const msg = event.message as any;
+      const msg = event.message as unknown as {
+        id: string;
+        from: string;
+        to: string;
+        body?: string;
+        type: string;
+        direction?: 'incoming' | 'outgoing';
+        fromMe?: boolean;
+        timestamp: number;
+        metadata?: Record<string, unknown>;
+        chatId?: string;
+      };
 
       console.log('[ChatViewer] onMessage fired', {
         eventSessionId: event.sessionId,
@@ -224,8 +235,8 @@ export function ChatViewer() {
       // The adapter already resolves @lid → @c.us before the WS emit, but we
       // also maintain a local cache here in case an unresolved @lid ever slips
       // through (e.g. on the very first message before the LID map is built).
-      const originalFrom = (msg.from as string) || '';
-      let incomingChatId = ((msg.chatId || msg.from) as string) || '';
+      const originalFrom = msg.from || '';
+      let incomingChatId = (msg.chatId || msg.from) || '';
 
       // If backend resolved the LID, cache the mapping for future messages
       if (originalFrom.endsWith('@lid') && incomingChatId && !incomingChatId.endsWith('@lid')) {
@@ -247,23 +258,23 @@ export function ChatViewer() {
 
       // direction may come from backend payload or fall back to fromMe flag
       const direction: 'incoming' | 'outgoing' =
-        (msg.direction as 'incoming' | 'outgoing') ??
+        msg.direction ??
         (msg.fromMe ? 'outgoing' : 'incoming');
 
       const newMsg: Message = {
-        id: msg.id as string,
+        id: msg.id,
         sessionId: event.sessionId,
-        waMessageId: msg.id as string,
+        waMessageId: msg.id,
         chatId: incomingChatId,
         from: originalFrom,
-        to: (msg.to as string) || '',
-        body: (msg.body as string) || '',
-        type: (msg.type as string) || 'text',
+        to: msg.to || '',
+        body: msg.body || '',
+        type: msg.type || 'text',
         direction,
-        timestamp: msg.timestamp as number,
+        timestamp: msg.timestamp,
         status: 'sent',
-        metadata: msg.metadata as Record<string, any> | undefined,
-        createdAt: new Date(((msg.timestamp as number) || Date.now() / 1000) * 1000).toISOString(),
+        metadata: msg.metadata,
+        createdAt: new Date((msg.timestamp || Date.now() / 1000) * 1000).toISOString(),
       };
 
       // Add to message list only if this chat is currently open

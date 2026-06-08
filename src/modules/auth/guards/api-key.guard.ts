@@ -39,7 +39,7 @@ export class ApiKeyGuard implements CanActivate {
         name: 'Master Key',
         role: ApiKeyRole.ADMIN,
         isActive: true,
-      } as ApiKey;
+      };
       return true;
     }
 

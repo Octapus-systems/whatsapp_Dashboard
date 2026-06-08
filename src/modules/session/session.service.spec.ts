@@ -10,7 +10,6 @@ import { WebhookService } from '../webhook/webhook.service';
 import { HookManager } from '../../core/hooks';
 import { MessageService } from '../message/message.service';
 
-
 function createMockSession(overrides: Partial<Session> = {}): Session {
   return {
     id: 'sess-uuid-1',

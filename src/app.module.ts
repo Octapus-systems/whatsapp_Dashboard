@@ -67,15 +67,13 @@ if (process.env.QUEUE_ENABLED === 'true') {
             username: configService.get<string>('dataDatabase.username'),
             password: configService.get<string>('dataDatabase.password'),
             database: 'openwa',
-            schema: 'main',
             entities,
             synchronize: true, // Safe for auth/audit which have no migrations
             retryAttempts: 10,
             retryDelay: 3000,
-            ssl:
-              configService.get<boolean>('dataDatabase.ssl', false)
-                ? { rejectUnauthorized: configService.get<boolean>('dataDatabase.sslRejectUnauthorized', true) }
-                : false,
+            ssl: configService.get<boolean>('dataDatabase.ssl', false)
+              ? { rejectUnauthorized: configService.get<boolean>('dataDatabase.sslRejectUnauthorized', true) }
+              : false,
             logging,
           };
         }
