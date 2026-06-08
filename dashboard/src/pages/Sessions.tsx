@@ -25,6 +25,8 @@ export function Sessions() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const qrRefreshInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const currentSessionName = useRef<string>('');
 
   useWebSocket({
     onSessionStatus: useCallback(
@@ -39,6 +41,17 @@ export function Sessions() {
         }
       },
       [toast, t],
+    ),
+    onQRCode: useCallback(
+      (event: { sessionId: string; qrCode: string }) => {
+        const session = sessions.find(s => s.id === event.sessionId);
+        setQrData({
+          sessionId: event.sessionId,
+          sessionName: session?.name || currentSessionName.current,
+          qrCode: event.qrCode,
+        });
+      },
+      [sessions],
     ),
   });
 
@@ -59,9 +72,6 @@ export function Sessions() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const qrRefreshInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  const currentSessionName = useRef<string>('');
-
   const fetchQR = useCallback(async (sessionId: string) => {
     try {
       const qr = await sessionApi.getQR(sessionId);
@@ -71,10 +81,13 @@ export function Sessions() {
         currentSessionName.current = '';
         fetchSessions();
       }
-    } catch {
+    } catch (err) {
       setQrData(null);
       currentSessionName.current = '';
-      fetchSessions();
+      await fetchSessions();
+      if (err instanceof Error && !err.message.toLowerCase().includes('authenticated')) {
+        setError(err.message);
+      }
     }
   }, []);
 
@@ -115,7 +128,9 @@ export function Sessions() {
       setSessions(sessions.filter(s => s.id !== id));
       toast.success(
         t('sessions.delete.successTitle'),
-        session ? t('sessions.delete.successDescNamed', { name: session.name }) : t('sessions.delete.successDescGeneric'),
+        session
+          ? t('sessions.delete.successDescNamed', { name: session.name })
+          : t('sessions.delete.successDescGeneric'),
       );
     } catch (err) {
       const msg = err instanceof Error ? err.message : t('sessions.delete.errorDefault');
@@ -134,6 +149,7 @@ export function Sessions() {
     }
 
     try {
+      setError(null);
       await sessionApi.start(id);
       setSessions(sessions.map(s => (s.id === id ? { ...s, status: 'connecting' } : s)));
       await fetchSessions();
@@ -151,11 +167,17 @@ export function Sessions() {
     const session = sessions.find(s => s.id === id);
     const sessionName = session?.name || '';
     try {
+      setError(null);
       const qr = await sessionApi.getQR(id);
       setQrData({ sessionId: id, sessionName, qrCode: qr.qrCode });
     } catch (err) {
       console.error('Failed to get QR:', err);
-      setError(t('sessions.qr.unavailable'));
+      await fetchSessions();
+      if (err instanceof Error && err.message.toLowerCase().includes('authenticated')) {
+        setQrData(null);
+        return;
+      }
+      setError(err instanceof Error ? err.message : t('sessions.qr.unavailable'));
     }
   };
 
@@ -188,7 +210,8 @@ export function Sessions() {
       statusFilter === 'all' ||
       (statusFilter === 'active' && s.status === 'ready') ||
       (statusFilter === 'inactive' && ['created', 'idle', 'disconnected'].includes(s.status)) ||
-      (statusFilter === 'connecting' && ['initializing', 'connecting', 'qr_ready'].includes(s.status));
+      (statusFilter === 'connecting' &&
+        ['initializing', 'connecting', 'qr_ready', 'authenticating'].includes(s.status));
     return matchesSearch && matchesStatus;
   });
 
@@ -330,9 +353,15 @@ export function Sessions() {
                 <>
                   <img src={qrData.qrCode} alt="QR" style={{ maxWidth: '280px', borderRadius: '12px' }} />
                   <div className="qr-instructions">
-                    <p className="qr-step"><Trans i18nKey="sessions.qr.step1" components={{ strong: <strong /> }} /></p>
-                    <p className="qr-step"><Trans i18nKey="sessions.qr.step2" components={{ strong: <strong /> }} /></p>
-                    <p className="qr-step"><Trans i18nKey="sessions.qr.step3" components={{ strong: <strong /> }} /></p>
+                    <p className="qr-step">
+                      <Trans i18nKey="sessions.qr.step1" components={{ strong: <strong /> }} />
+                    </p>
+                    <p className="qr-step">
+                      <Trans i18nKey="sessions.qr.step2" components={{ strong: <strong /> }} />
+                    </p>
+                    <p className="qr-step">
+                      <Trans i18nKey="sessions.qr.step3" components={{ strong: <strong /> }} />
+                    </p>
                   </div>
                   <p className="qr-auto-refresh">
                     <RefreshCw size={14} className="spin-slow" /> {t('sessions.qr.autoRefresh')}
@@ -366,7 +395,9 @@ export function Sessions() {
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">{t('sessions.details.status')}</span>
-                  <span className={`status-badge ${selectedSession.status}`}>{formatStatus(selectedSession.status)}</span>
+                  <span className={`status-badge ${selectedSession.status}`}>
+                    {formatStatus(selectedSession.status)}
+                  </span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">{t('sessions.details.sessionId')}</span>
@@ -383,7 +414,9 @@ export function Sessions() {
                 <div className="detail-item">
                   <span className="detail-label">{t('sessions.details.lastActive')}</span>
                   <span className="detail-value">
-                    {selectedSession.lastActive ? new Date(selectedSession.lastActive).toLocaleString() : t('common.never')}
+                    {selectedSession.lastActive
+                      ? new Date(selectedSession.lastActive).toLocaleString()
+                      : t('common.never')}
                   </span>
                 </div>
               </div>
@@ -443,7 +476,7 @@ export function Sessions() {
                 <span className={`status-pill ${session.status}`}>{formatStatus(session.status)}</span>
               </div>
 
-              {session.status === 'initializing' || session.status === 'connecting' || session.status === 'qr_ready' ? (
+              {['initializing', 'connecting', 'qr_ready', 'authenticating'].includes(session.status) ? (
                 <div className="qr-placeholder">
                   <QrCode size={80} className="qr-icon" />
                   <p>{session.status === 'qr_ready' ? t('sessions.qr.scanToConnect') : t('sessions.qr.preparing')}</p>
@@ -483,7 +516,8 @@ export function Sessions() {
                     <Play size={16} />
                     {t('sessions.actions.start')}
                   </button>
-                ) : canWrite && ['ready', 'initializing', 'connecting', 'qr_ready'].includes(session.status) ? (
+                ) : canWrite &&
+                  ['ready', 'initializing', 'connecting', 'qr_ready', 'authenticating'].includes(session.status) ? (
                   <button className="btn-action" onClick={() => handleStop(session.id)}>
                     <Square size={16} />
                     {t('sessions.actions.stop')}

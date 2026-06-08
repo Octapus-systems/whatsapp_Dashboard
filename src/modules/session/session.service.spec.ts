@@ -78,6 +78,7 @@ describe('SessionService', () => {
 
     eventsGateway = {
       emitSessionStatus: jest.fn(),
+      emitQRCode: jest.fn(),
       emitMessage: jest.fn(),
     };
 
@@ -257,6 +258,20 @@ describe('SessionService', () => {
         expect.objectContaining({ sessionId: 'sess-uuid-1' }),
         expect.any(Object),
       );
+    });
+
+    it('should emit QR code events when the engine generates a QR', async () => {
+      const session = createMockSession();
+      (repository.findOne as jest.Mock).mockResolvedValue(session);
+      (repository.update as jest.Mock).mockResolvedValue({ affected: 1 });
+
+      await service.start('sess-uuid-1');
+      const callbacks = mockEngine.initialize.mock.calls[0][0];
+
+      callbacks.onQRCode('data:image/png;base64,qr');
+
+      expect(eventsGateway.emitQRCode).toHaveBeenCalledWith('sess-uuid-1', 'data:image/png;base64,qr');
+      expect(repository.update).toHaveBeenCalledWith('sess-uuid-1', { status: SessionStatus.QR_READY });
     });
   });
 
