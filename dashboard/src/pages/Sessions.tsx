@@ -9,7 +9,7 @@ import { useRole } from '../hooks/useRole';
 import { PageHeader } from '../components/PageHeader';
 import './Sessions.css';
 
-const QR_STATUSES: Session['status'][] = ['initializing', 'connecting', 'qr_ready'];
+const QR_STATUSES: Session['status'][] = ['initializing', 'connecting', 'qr_ready', 'authenticating'];
 
 const isExpectedQRError = (err: unknown) => {
   const message = err instanceof Error ? err.message.toLowerCase() : '';
