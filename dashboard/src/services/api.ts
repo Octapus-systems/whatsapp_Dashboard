@@ -10,7 +10,16 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 export interface Session {
   id: string;
   name: string;
-  status: 'created' | 'idle' | 'initializing' | 'connecting' | 'qr_ready' | 'ready' | 'disconnected';
+  status:
+    | 'created'
+    | 'idle'
+    | 'initializing'
+    | 'connecting'
+    | 'qr_ready'
+    | 'authenticating'
+    | 'ready'
+    | 'disconnected'
+    | 'failed';
   phone?: string;
   pushName?: string;
   lastActive?: string;
@@ -105,7 +114,6 @@ export interface Message {
   metadata?: Record<string, unknown>;
   createdAt: string;
 }
-
 
 export interface HealthStatus {
   status: 'ok' | 'error';
@@ -351,7 +359,7 @@ export const chatApi = {
   getGroups: (sessionId: string) => request<Group[]>(`/sessions/${sessionId}/groups`),
   getMessages: (sessionId: string, chatId: string, limit = 50, offset = 0) =>
     request<{ messages: Message[]; total: number }>(
-      `/sessions/${sessionId}/messages?chatId=${chatId}&limit=${limit}&offset=${offset}`
+      `/sessions/${sessionId}/messages?chatId=${chatId}&limit=${limit}&offset=${offset}`,
     ),
 };
 
