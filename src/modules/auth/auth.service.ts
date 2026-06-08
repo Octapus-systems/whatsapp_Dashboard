@@ -78,7 +78,7 @@ export class AuthService implements OnModuleInit {
 
   private async seedApiKey(rawKey: string, name: string, role: ApiKeyRole): Promise<ApiKey> {
     const keyHash = this.hashKey(rawKey);
-    const keyPrefix = rawKey.substring(0, 12);
+    const keyPrefix = rawKey.substring(0, 8);
 
     const apiKey = this.apiKeyRepository.create({
       name,
@@ -94,7 +94,7 @@ export class AuthService implements OnModuleInit {
     // Generate secure random key: owa_k1_<32 bytes hex>
     const rawKey = `owa_k1_${randomBytes(32).toString('hex')}`;
     const keyHash = this.hashKey(rawKey);
-    const keyPrefix = rawKey.substring(0, 12);
+    const keyPrefix = rawKey.substring(0, 8);
 
     const apiKey = this.apiKeyRepository.create({
       name: dto.name,
