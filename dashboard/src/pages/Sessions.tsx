@@ -9,7 +9,7 @@ import { useRole } from '../hooks/useRole';
 import { PageHeader } from '../components/PageHeader';
 import './Sessions.css';
 
-const QR_STATUSES: Session['status'][] = ['initializing', 'connecting', 'qr_ready', 'authenticating'];
+const QR_STATUSES: Session['status'][] = ['initializing', 'connecting', 'qr_ready'];
 
 const isExpectedQRError = (err: unknown) => {
   const message = err instanceof Error ? err.message.toLowerCase() : '';
@@ -51,6 +51,11 @@ export function Sessions() {
           currentSessionName.current = '';
           setError(null);
           toast.success(t('sessions.toasts.readyTitle'), t('sessions.toasts.readyDesc'));
+        } else if (event.status === 'authenticating') {
+          // QR scanned, authentication in progress - clear QR display
+          setQrData(prev => (prev?.sessionId === event.sessionId ? null : prev));
+          currentSessionName.current = '';
+          setError(null);
         } else if (event.status === 'disconnected' || event.status === 'failed') {
           setQrData(prev => (prev?.sessionId === event.sessionId ? null : prev));
           currentSessionName.current = '';
