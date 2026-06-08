@@ -45,18 +45,49 @@ if (process.env.QUEUE_ENABLED === 'true') {
       load: [configuration],
     }),
 
-    // Main Database (always SQLite - boot config)
+    // Main Database (auth/audit config storage)
+    // Uses Postgres when DATABASE_TYPE=postgres, otherwise falls back to SQLite.
     TypeOrmModule.forRootAsync({
       name: 'main',
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'sqlite' as const,
-        database: configService.get<string>('database.database', './data/main.sqlite'),
-        entities: [__dirname + '/modules/auth/**/*.entity{.ts,.js}', __dirname + '/modules/audit/**/*.entity{.ts,.js}'],
-        synchronize: true,
-        logging: configService.get<boolean>('database.logging', false),
-      }),
+      useFactory: (configService: ConfigService) => {
+        const dbType = configService.get<'sqlite' | 'postgres'>('dataDatabase.type', 'sqlite');
+        const entities = [
+          __dirname + '/modules/auth/**/*.entity{.ts,.js}',
+          __dirname + '/modules/audit/**/*.entity{.ts,.js}',
+        ];
+        const logging = configService.get<boolean>('database.logging', false);
+
+        if (dbType === 'postgres') {
+          return {
+            type: 'postgres' as const,
+            host: configService.get<string>('dataDatabase.host'),
+            port: configService.get<number>('dataDatabase.port'),
+            username: configService.get<string>('dataDatabase.username'),
+            password: configService.get<string>('dataDatabase.password'),
+            database: 'openwa',
+            schema: 'main',
+            entities,
+            synchronize: true, // Safe for auth/audit which have no migrations
+            retryAttempts: 10,
+            retryDelay: 3000,
+            ssl:
+              configService.get<boolean>('dataDatabase.ssl', false)
+                ? { rejectUnauthorized: configService.get<boolean>('dataDatabase.sslRejectUnauthorized', true) }
+                : false,
+            logging,
+          };
+        }
+
+        return {
+          type: 'sqlite' as const,
+          database: configService.get<string>('database.database', './data/main.sqlite'),
+          entities,
+          synchronize: true,
+          logging,
+        };
+      },
     }),
 
     // Data Storage Database (pluggable - user data)

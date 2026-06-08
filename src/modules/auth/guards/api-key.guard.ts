@@ -2,7 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { AuthService } from '../auth.service';
-import { ApiKeyRole } from '../entities/api-key.entity';
+import { ApiKey, ApiKeyRole } from '../entities/api-key.entity';
 import { REQUIRED_ROLE_KEY, PUBLIC_KEY } from '../decorators/auth.decorators';
 
 @Injectable()
@@ -31,7 +31,19 @@ export class ApiKeyGuard implements CanActivate {
     const sessionId = (request.params['sessionId'] || request.params['id']) as string | undefined;
     const clientIp = this.getClientIp(request);
 
-    // Validate API key
+    // Master key bypass: API_MASTER_KEY is always treated as admin and skips the DB lookup
+    const masterKey = process.env.API_MASTER_KEY;
+    if (masterKey && apiKeyHeader === masterKey) {
+      (request as Request & { apiKey: Partial<ApiKey> }).apiKey = {
+        id: 'master',
+        name: 'Master Key',
+        role: ApiKeyRole.ADMIN,
+        isActive: true,
+      } as ApiKey;
+      return true;
+    }
+
+    // Validate API key against database
     const apiKey = await this.authService.validateApiKey(apiKeyHeader, clientIp, sessionId);
 
     // Check role permission

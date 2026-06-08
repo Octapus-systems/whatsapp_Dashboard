@@ -205,6 +205,23 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 }
 
 // =============================================================================
+// Auth API
+// =============================================================================
+
+export const authApi = {
+  /**
+   * Validates an API key against the backend and returns the role.
+   * Uses VITE_API_URL so it always hits the correct backend, even when
+   * the dashboard is hosted as a separate static site (e.g. on Render).
+   */
+  validate: (apiKey: string) =>
+    request<{ valid: boolean; role?: string }>('/auth/validate', {
+      method: 'POST',
+      headers: { 'X-API-Key': apiKey },
+    }),
+};
+
+// =============================================================================
 // Session API
 // =============================================================================
 

@@ -6,6 +6,7 @@ import { Layout } from './components/Layout';
 import { ToastProvider } from './components/Toast';
 import { RoleProvider, useRole, type UserRole } from './hooks/useRole';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { authApi } from './services/api';
 import './App.css';
 
 const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
@@ -40,18 +41,16 @@ function AppContent() {
     setApiKey(key);
     sessionStorage.setItem('openwa_api_key', key);
 
-    // Fetch the role from API
+    // Fetch the role from the backend (uses VITE_API_URL — not a hardcoded relative path)
     try {
-      const response = await fetch('/api/auth/validate', {
-        method: 'POST',
-        headers: { 'X-API-Key': key },
-      });
-      if (response.ok) {
-        const data = await response.json();
+      const data = await authApi.validate(key);
+      if (data.valid && data.role) {
         setRole(data.role as UserRole);
+      } else {
+        setRole('viewer');
       }
     } catch {
-      // Default to viewer if we can't fetch role
+      // Default to viewer if the backend is temporarily unreachable
       setRole('viewer');
     }
 
@@ -65,15 +64,12 @@ function AppContent() {
     sessionStorage.removeItem('openwa_api_key');
   };
 
-  // Re-validate and get role on mount if already authenticated
+  // Re-validate and refresh role on mount if already authenticated
   useEffect(() => {
     if (!savedKey) return;
 
-    fetch('/api/auth/validate', {
-      method: 'POST',
-      headers: { 'X-API-Key': savedKey },
-    })
-      .then(res => res.json())
+    authApi
+      .validate(savedKey)
       .then(data => {
         if (data.valid && data.role) {
           setRole(data.role as UserRole);

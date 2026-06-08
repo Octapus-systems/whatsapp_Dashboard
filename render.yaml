@@ -1,0 +1,122 @@
+# render.yaml — OpenWA Render Deployment Config
+# This file provisions the backend API service and PostgreSQL database on Render.
+# Commit this file and connect your repo to Render to use it.
+
+services:
+  - type: web
+    name: whatsapp-dashboard
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter  # upgrade to standard for persistent disk
+    healthCheckPath: /api/health
+    envVars:
+      # Core
+      - key: NODE_ENV
+        value: production
+      - key: API_PORT
+        value: "2785"
+      - key: PORT
+        value: "2785"
+      - key: LOG_LEVEL
+        value: info
+
+      # CORS — frontend URL
+      - key: CORS_ORIGINS
+        value: https://whatsapp-dashboard-1-ua2d.onrender.com
+
+      # Engine
+      - key: ENGINE_TYPE
+        value: whatsapp-web.js
+      - key: SESSION_DATA_PATH
+        value: ./data/sessions
+      - key: PUPPETEER_HEADLESS
+        value: "true"
+      - key: PUPPETEER_ARGS
+        value: --no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage,--disable-gpu
+      # PUPPETEER_EXECUTABLE_PATH is intentionally NOT set here.
+      # The Dockerfile already sets ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+      # Database — PostgreSQL (from Render Postgres add-on)
+      - key: DATABASE_TYPE
+        value: postgres
+      - key: DATABASE_HOST
+        fromDatabase:
+          name: openwa-db
+          property: host
+      - key: DATABASE_PORT
+        fromDatabase:
+          name: openwa-db
+          property: port
+      - key: DATABASE_NAME
+        fromDatabase:
+          name: openwa-db
+          property: database
+      - key: DATABASE_USERNAME
+        fromDatabase:
+          name: openwa-db
+          property: user
+      - key: DATABASE_PASSWORD
+        fromDatabase:
+          name: openwa-db
+          property: password
+      - key: DATABASE_SSL
+        value: "true"
+      - key: DATABASE_SSL_REJECT_UNAUTHORIZED
+        value: "false"
+      - key: POSTGRES_BUILTIN
+        value: "false"
+
+      # Redis
+      - key: REDIS_ENABLED
+        value: "false"
+      - key: REDIS_BUILTIN
+        value: "false"
+
+      # Storage
+      - key: STORAGE_TYPE
+        value: local
+      - key: STORAGE_LOCAL_PATH
+        value: ./data/media
+      - key: MINIO_BUILTIN
+        value: "false"
+
+      # Webhook
+      - key: WEBHOOK_TIMEOUT
+        value: "10000"
+      - key: WEBHOOK_MAX_RETRIES
+        value: "3"
+      - key: WEBHOOK_RETRY_DELAY
+        value: "5000"
+
+      # Rate limiting
+      - key: RATE_LIMIT_TTL
+        value: "60"
+      - key: RATE_LIMIT_MAX
+        value: "100"
+
+      # Plugins
+      - key: PLUGINS_ENABLED
+        value: "true"
+      - key: PLUGINS_DIR
+        value: ./data/plugins
+
+      # Dashboard
+      - key: DASHBOARD_ENABLED
+        value: "true"
+      - key: DASHBOARD_PORT
+        value: "2886"
+
+      # Security — change this to a strong secret key!
+      - key: API_MASTER_KEY
+        value: 8f4c9d2e7a1b5c6d9e3f7a8b1c2d4e5f
+
+      # Developer
+      - key: ENABLE_SWAGGER
+        value: "true"
+
+databases:
+  - name: openwa-db
+    plan: free
+    databaseName: openwa
+    user: openwa

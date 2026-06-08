@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff } from 'lucide-react';
 import { GithubIcon } from '../components/GithubIcon';
+import { authApi } from '../services/api';
 import './Login.css';
 
 interface LoginProps {
@@ -25,22 +26,15 @@ export function Login({ onLogin }: LoginProps) {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/validate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': apiKey,
-        },
-      });
-
-      if (response.ok) {
+      const data = await authApi.validate(apiKey);
+      if (data.valid) {
         onLogin(apiKey);
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        setError(errorData.message || t('login.invalidKey'));
+        setError(t('login.invalidKey'));
       }
-    } catch {
-      setError(t('login.connectionError'));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      setError(msg || t('login.invalidKey'));
     } finally {
       setIsLoading(false);
     }
