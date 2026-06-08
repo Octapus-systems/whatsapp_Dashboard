@@ -157,7 +157,7 @@ export class WhatsAppWebJsAdapter extends EventEmitter implements IWhatsAppEngin
           for (const c of allContacts) {
             // whatsapp-web.js exposes the linked-device id on the raw contact
             // object as `lid` (a WAid-like object). Cast to any to access it.
-            const lidSerialized = (c as any).lid?._serialized as string | undefined;
+            const lidSerialized = (c as unknown as { lid?: { _serialized: string } }).lid?._serialized;
             if (lidSerialized && lidSerialized.endsWith('@lid')) {
               this.lidToJidMap.set(lidSerialized, c.id._serialized);
               mapped++;
@@ -206,9 +206,9 @@ export class WhatsAppWebJsAdapter extends EventEmitter implements IWhatsAppEngin
 
         const incomingMessage: IncomingMessage = {
           id: msg.id._serialized,
-          from: msg.from,          // preserve original (useful for debugging)
+          from: msg.from, // preserve original (useful for debugging)
           to: msg.to,
-          chatId: resolvedChatId,  // canonical @c.us JID (or original if unresolvable)
+          chatId: resolvedChatId, // canonical @c.us JID (or original if unresolvable)
           body: msg.body,
           type: msg.type,
           timestamp: msg.timestamp,
@@ -246,16 +246,21 @@ export class WhatsAppWebJsAdapter extends EventEmitter implements IWhatsAppEngin
         }
 
         // Handle location
-        if ((msg.type as string) === 'location' && (msg as any).location) {
-          const loc = (msg as any).location;
-          incomingMessage.metadata = {
-            ...incomingMessage.metadata,
-            location: {
-              latitude: loc.latitude,
-              longitude: loc.longitude,
-              description: loc.name || loc.address || '',
-            },
+        if ((msg.type as string) === 'location') {
+          const msgAsLocation = msg as unknown as {
+            location?: { latitude: number; longitude: number; name?: string; address?: string };
           };
+          if (msgAsLocation.location) {
+            const loc = msgAsLocation.location;
+            incomingMessage.metadata = {
+              ...incomingMessage.metadata,
+              location: {
+                latitude: loc.latitude,
+                longitude: loc.longitude,
+                description: loc.name || loc.address || '',
+              },
+            };
+          }
         }
 
         // Handle contact card / vcard

@@ -35,7 +35,19 @@ export class WhatsAppWebJsPlugin implements IEnginePlugin {
   }
 
   createEngine(config: Record<string, unknown>): IWhatsAppEngine {
-    const engineConfig = (this.context?.config?.engine as any) ?? {};
+    const engineConfig =
+      (
+        this.context?.config as unknown as {
+          engine?: {
+            sessionDataPath?: string;
+            puppeteer?: {
+              headless?: boolean;
+              args?: string[];
+              executablePath?: string;
+            };
+          };
+        }
+      )?.engine ?? {};
     const sessionId = config.sessionId as string;
     const sessionDataPath = engineConfig.sessionDataPath ?? './data/sessions';
     const headless = engineConfig.puppeteer?.headless ?? true;

@@ -102,7 +102,7 @@ export interface Message {
   direction: 'incoming' | 'outgoing';
   timestamp?: number;
   status: 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string;
 }
 

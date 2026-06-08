@@ -98,8 +98,8 @@ export class MessageService {
           filename: dto.filename,
           url: dto.url,
           data: dto.base64,
-        }
-      }
+        },
+      },
     });
 
     try {
@@ -137,8 +137,8 @@ export class MessageService {
           filename: dto.filename,
           url: dto.url,
           data: dto.base64,
-        }
-      }
+        },
+      },
     });
 
     try {
@@ -175,8 +175,8 @@ export class MessageService {
           filename: dto.filename,
           url: dto.url,
           data: dto.base64,
-        }
-      }
+        },
+      },
     });
 
     try {
@@ -214,8 +214,8 @@ export class MessageService {
           filename: dto.filename,
           url: dto.url,
           data: dto.base64,
-        }
-      }
+        },
+      },
     });
 
     try {
@@ -281,8 +281,8 @@ export class MessageService {
           longitude: dto.longitude,
           description: dto.description || '',
           address: dto.address || '',
-        }
-      }
+        },
+      },
     });
 
     try {
@@ -325,8 +325,8 @@ export class MessageService {
         contact: {
           name: dto.contactName,
           number: dto.contactNumber,
-        }
-      }
+        },
+      },
     });
 
     try {
@@ -366,8 +366,8 @@ export class MessageService {
           filename: dto.filename,
           url: dto.url,
           data: dto.base64,
-        }
-      }
+        },
+      },
     });
 
     try {
