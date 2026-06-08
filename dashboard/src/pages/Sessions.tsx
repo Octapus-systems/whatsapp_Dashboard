@@ -11,6 +11,11 @@ import './Sessions.css';
 
 const QR_STATUSES: Session['status'][] = ['initializing', 'connecting', 'qr_ready', 'authenticating'];
 
+const isExpectedQRError = (err: unknown) => {
+  const message = err instanceof Error ? err.message.toLowerCase() : '';
+  return message.includes('authenticated') || message.includes('not started') || message.includes('not ready');
+};
+
 export function Sessions() {
   const { t } = useTranslation();
   useDocumentTitle(t('sessions.title'));
@@ -44,10 +49,12 @@ export function Sessions() {
         if (event.status === 'ready') {
           setQrData(prev => (prev?.sessionId === event.sessionId ? null : prev));
           currentSessionName.current = '';
+          setError(null);
           toast.success(t('sessions.toasts.readyTitle'), t('sessions.toasts.readyDesc'));
         } else if (event.status === 'disconnected' || event.status === 'failed') {
           setQrData(prev => (prev?.sessionId === event.sessionId ? null : prev));
           currentSessionName.current = '';
+          setError(null);
           toast.warning(t('sessions.toasts.disconnectedTitle'), t('sessions.toasts.disconnectedDesc'));
         }
       },
@@ -71,8 +78,12 @@ export function Sessions() {
       setLoading(true);
       const data = await sessionApi.list();
       setSessions(data);
+      sessionsRef.current = data;
+      setError(null);
+      return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : t('sessions.create.errorDefault'));
+      return null;
     } finally {
       setLoading(false);
     }
@@ -103,10 +114,11 @@ export function Sessions() {
       } catch (err) {
         setQrData(null);
         currentSessionName.current = '';
-        await fetchSessions();
-        const message = err instanceof Error ? err.message.toLowerCase() : '';
-        if (!message.includes('authenticated') && !message.includes('not started') && !message.includes('not ready')) {
+        const latestSessions = await fetchSessions();
+        if (!isExpectedQRError(err)) {
           setError(err instanceof Error ? err.message : t('sessions.qr.unavailable'));
+        } else if (latestSessions?.some(s => s.id === sessionId && s.status === 'ready')) {
+          setError(null);
         }
       }
     },
@@ -196,16 +208,14 @@ export function Sessions() {
       setQrData({ sessionId: id, sessionName, qrCode: qr.qrCode });
     } catch (err) {
       console.error('Failed to get QR:', err);
-      await fetchSessions();
-      if (err instanceof Error && err.message.toLowerCase().includes('authenticated')) {
-        setQrData(null);
-        return;
-      }
-      if (
-        err instanceof Error &&
-        (err.message.toLowerCase().includes('not started') || err.message.toLowerCase().includes('not ready'))
-      ) {
-        setQrData({ sessionId: id, sessionName, qrCode: '' });
+      const latestSessions = await fetchSessions();
+      if (isExpectedQRError(err)) {
+        const latestSession = latestSessions?.find(s => s.id === id) || sessionsRef.current.find(s => s.id === id);
+        if (latestSession && QR_STATUSES.includes(latestSession.status)) {
+          setQrData({ sessionId: id, sessionName, qrCode: '' });
+        } else {
+          setQrData(null);
+        }
         return;
       }
       setError(err instanceof Error ? err.message : t('sessions.qr.unavailable'));
