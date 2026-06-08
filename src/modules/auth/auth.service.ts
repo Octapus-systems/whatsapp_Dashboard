@@ -158,6 +158,21 @@ export class AuthService implements OnModuleInit {
   }
 
   async validateApiKey(rawKey: string, clientIp?: string, sessionId?: string): Promise<ApiKey> {
+    // Master key bypass: API_MASTER_KEY is treated as an active admin API key
+    const masterKey = process.env.API_MASTER_KEY;
+    if (masterKey && rawKey === masterKey) {
+      const mockKey = new ApiKey();
+      mockKey.id = 'master';
+      mockKey.name = 'Master Key';
+      mockKey.role = ApiKeyRole.ADMIN;
+      mockKey.isActive = true;
+      mockKey.allowedIps = null;
+      mockKey.allowedSessions = null;
+      mockKey.keyPrefix = rawKey.substring(0, 8);
+      mockKey.usageCount = 0;
+      return mockKey;
+    }
+
     const keyHash = this.hashKey(rawKey);
     const apiKey = await this.apiKeyRepository.findOne({ where: { keyHash } });
 
