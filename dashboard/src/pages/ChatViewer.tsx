@@ -37,6 +37,28 @@ interface CombinedChat {
   lastMessageTime?: string;
 }
 
+/** Shape of msg.metadata.media for image/video/audio/document messages */
+interface MessageMedia {
+  url?: string;
+  data?: string;
+  mimetype?: string;
+  filename?: string;
+}
+
+/** Shape of msg.metadata.location for location messages */
+interface MessageLocation {
+  latitude?: number;
+  longitude?: number;
+  description?: string;
+  address?: string;
+}
+
+/** Shape of msg.metadata.contact for contact-card messages */
+interface MessageContact {
+  name?: string;
+  number?: string;
+}
+
 export function ChatViewer() {
   const { t } = useTranslation();
   useDocumentTitle(t('chatViewer.title', 'Chat Viewer'));
@@ -384,7 +406,7 @@ export function ChatViewer() {
   const renderMessageContent = (msg: Message) => {
     switch (msg.type) {
       case 'image': {
-        const media = msg.metadata?.media;
+        const media = msg.metadata?.media as MessageMedia | undefined;
         const src = media?.url || (media?.data ? `data:${media.mimetype};base64,${media.data}` : null);
         return (
           <div className="media-message">
@@ -401,7 +423,7 @@ export function ChatViewer() {
         );
       }
       case 'video': {
-        const media = msg.metadata?.media;
+        const media = msg.metadata?.media as MessageMedia | undefined;
         const src = media?.url || (media?.data ? `data:${media.mimetype};base64,${media.data}` : null);
         return (
           <div className="media-message">
@@ -419,7 +441,7 @@ export function ChatViewer() {
       }
       case 'audio':
       case 'voice': {
-        const media = msg.metadata?.media;
+        const media = msg.metadata?.media as MessageMedia | undefined;
         const src = media?.url || (media?.data ? `data:${media.mimetype};base64,${media.data}` : null);
         return (
           <div className="media-message audio">
@@ -435,7 +457,7 @@ export function ChatViewer() {
         );
       }
       case 'document': {
-        const media = msg.metadata?.media;
+        const media = msg.metadata?.media as MessageMedia | undefined;
         const src = media?.url || (media?.data ? `data:${media.mimetype};base64,${media.data}` : null);
         const fileName = media?.filename || msg.body || t('chatViewer.mediaType.document', 'Document');
         return (
@@ -452,7 +474,7 @@ export function ChatViewer() {
         );
       }
       case 'location': {
-        const location = msg.metadata?.location;
+        const location = msg.metadata?.location as MessageLocation | undefined;
         if (location?.latitude && location?.longitude) {
           const mapUrl = `https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}`;
           return (
@@ -472,7 +494,7 @@ export function ChatViewer() {
         );
       }
       case 'contact': {
-        const contact = msg.metadata?.contact;
+        const contact = msg.metadata?.contact as MessageContact | undefined;
         if (contact?.name || contact?.number) {
           return (
             <div className="media-message contact-card" style={{ display: 'flex', alignItems: 'center' }}>
