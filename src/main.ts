@@ -5,6 +5,8 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { ShutdownService } from './common/services/shutdown.service';
 import * as dotenv from 'dotenv';
+import express from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -126,6 +128,18 @@ async function bootstrap() {
 
   // Global prefix
   app.setGlobalPrefix('api');
+
+  const dashboardDistPath = path.resolve(process.cwd(), 'dashboard', 'dist');
+  const dashboardIndexPath = path.join(dashboardDistPath, 'index.html');
+  if (fs.existsSync(dashboardIndexPath)) {
+    app.use(express.static(dashboardDistPath));
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/socket.io')) {
+        return res.sendFile(dashboardIndexPath);
+      }
+      return next();
+    });
+  }
 
   // Enhanced Validation pipe with security options
   app.useGlobalPipes(

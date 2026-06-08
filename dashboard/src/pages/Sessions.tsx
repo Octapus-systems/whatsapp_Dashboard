@@ -9,6 +9,8 @@ import { useRole } from '../hooks/useRole';
 import { PageHeader } from '../components/PageHeader';
 import './Sessions.css';
 
+const QR_STATUSES: Session['status'][] = ['initializing', 'connecting', 'qr_ready', 'authenticating'];
+
 export function Sessions() {
   const { t } = useTranslation();
   useDocumentTitle(t('sessions.title'));
@@ -27,6 +29,11 @@ export function Sessions() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const qrRefreshInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentSessionName = useRef<string>('');
+  const sessionsRef = useRef<Session[]>([]);
+
+  useEffect(() => {
+    sessionsRef.current = sessions;
+  }, [sessions]);
 
   useWebSocket({
     onSessionStatus: useCallback(
@@ -35,8 +42,12 @@ export function Sessions() {
           prev.map(s => (s.id === event.sessionId ? { ...s, status: event.status as Session['status'] } : s)),
         );
         if (event.status === 'ready') {
+          setQrData(prev => (prev?.sessionId === event.sessionId ? null : prev));
+          currentSessionName.current = '';
           toast.success(t('sessions.toasts.readyTitle'), t('sessions.toasts.readyDesc'));
-        } else if (event.status === 'disconnected') {
+        } else if (event.status === 'disconnected' || event.status === 'failed') {
+          setQrData(prev => (prev?.sessionId === event.sessionId ? null : prev));
+          currentSessionName.current = '';
           toast.warning(t('sessions.toasts.disconnectedTitle'), t('sessions.toasts.disconnectedDesc'));
         }
       },
@@ -72,24 +83,35 @@ export function Sessions() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchQR = useCallback(async (sessionId: string) => {
-    try {
-      const qr = await sessionApi.getQR(sessionId);
-      setQrData({ sessionId, sessionName: currentSessionName.current, qrCode: qr.qrCode });
-      if (qr.status === 'ready') {
+  const fetchQR = useCallback(
+    async (sessionId: string) => {
+      const session = sessionsRef.current.find(s => s.id === sessionId);
+      if (session && !QR_STATUSES.includes(session.status)) {
         setQrData(null);
         currentSessionName.current = '';
-        fetchSessions();
+        return;
       }
-    } catch (err) {
-      setQrData(null);
-      currentSessionName.current = '';
-      await fetchSessions();
-      if (err instanceof Error && !err.message.toLowerCase().includes('authenticated')) {
-        setError(err.message);
+
+      try {
+        const qr = await sessionApi.getQR(sessionId);
+        setQrData({ sessionId, sessionName: currentSessionName.current, qrCode: qr.qrCode });
+        if (qr.status === 'ready') {
+          setQrData(null);
+          currentSessionName.current = '';
+          fetchSessions();
+        }
+      } catch (err) {
+        setQrData(null);
+        currentSessionName.current = '';
+        await fetchSessions();
+        const message = err instanceof Error ? err.message.toLowerCase() : '';
+        if (!message.includes('authenticated') && !message.includes('not started') && !message.includes('not ready')) {
+          setError(err instanceof Error ? err.message : t('sessions.qr.unavailable'));
+        }
       }
-    }
-  }, []);
+    },
+    [t],
+  );
 
   useEffect(() => {
     if (qrData) {
@@ -143,7 +165,7 @@ export function Sessions() {
 
   const handleStart = async (id: string) => {
     const session = sessions.find(s => s.id === id);
-    if (session && ['initializing', 'connecting', 'qr_ready'].includes(session.status)) {
+    if (session && QR_STATUSES.includes(session.status)) {
       handleShowQR(id);
       return;
     }
@@ -153,7 +175,9 @@ export function Sessions() {
       await sessionApi.start(id);
       setSessions(sessions.map(s => (s.id === id ? { ...s, status: 'connecting' } : s)));
       await fetchSessions();
-      handleShowQR(id);
+      const sessionName = sessions.find(s => s.id === id)?.name || '';
+      currentSessionName.current = sessionName;
+      setQrData({ sessionId: id, sessionName, qrCode: '' });
     } catch (err) {
       console.error('Failed to start:', err);
       await fetchSessions();
@@ -175,6 +199,13 @@ export function Sessions() {
       await fetchSessions();
       if (err instanceof Error && err.message.toLowerCase().includes('authenticated')) {
         setQrData(null);
+        return;
+      }
+      if (
+        err instanceof Error &&
+        (err.message.toLowerCase().includes('not started') || err.message.toLowerCase().includes('not ready'))
+      ) {
+        setQrData({ sessionId: id, sessionName, qrCode: '' });
         return;
       }
       setError(err instanceof Error ? err.message : t('sessions.qr.unavailable'));
@@ -210,8 +241,7 @@ export function Sessions() {
       statusFilter === 'all' ||
       (statusFilter === 'active' && s.status === 'ready') ||
       (statusFilter === 'inactive' && ['created', 'idle', 'disconnected'].includes(s.status)) ||
-      (statusFilter === 'connecting' &&
-        ['initializing', 'connecting', 'qr_ready', 'authenticating'].includes(s.status));
+      (statusFilter === 'connecting' && QR_STATUSES.includes(s.status));
     return matchesSearch && matchesStatus;
   });
 
@@ -476,7 +506,7 @@ export function Sessions() {
                 <span className={`status-pill ${session.status}`}>{formatStatus(session.status)}</span>
               </div>
 
-              {['initializing', 'connecting', 'qr_ready', 'authenticating'].includes(session.status) ? (
+              {QR_STATUSES.includes(session.status) ? (
                 <div className="qr-placeholder">
                   <QrCode size={80} className="qr-icon" />
                   <p>{session.status === 'qr_ready' ? t('sessions.qr.scanToConnect') : t('sessions.qr.preparing')}</p>
@@ -516,8 +546,7 @@ export function Sessions() {
                     <Play size={16} />
                     {t('sessions.actions.start')}
                   </button>
-                ) : canWrite &&
-                  ['ready', 'initializing', 'connecting', 'qr_ready', 'authenticating'].includes(session.status) ? (
+                ) : canWrite && ['ready', ...QR_STATUSES].includes(session.status) ? (
                   <button className="btn-action" onClick={() => handleStop(session.id)}>
                     <Square size={16} />
                     {t('sessions.actions.stop')}
