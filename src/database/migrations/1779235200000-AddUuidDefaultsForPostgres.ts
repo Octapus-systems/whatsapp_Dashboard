@@ -27,7 +27,20 @@ export class AddUuidDefaultsForPostgres1779235200000 implements MigrationInterfa
     for (const table of this.tables) {
       const exists = await queryRunner.hasTable(table);
       if (!exists) continue;
-      await queryRunner.query(`ALTER TABLE "${table}" ALTER COLUMN "id" SET DEFAULT gen_random_uuid()::varchar`);
+
+      // The `id` column may be either `uuid` (when the table was first created
+      // by `synchronize`) or `character varying` (when created by the initial
+      // migration). Cast the default to match the actual column type so the
+      // ALTER succeeds in both cases.
+      const rows: Array<{ data_type: string }> = await queryRunner.query(
+        `SELECT data_type FROM information_schema.columns WHERE table_name = $1 AND column_name = 'id'`,
+        [table],
+      );
+      const dataType = rows[0]?.data_type;
+      if (!dataType) continue;
+
+      const defaultExpr = dataType === 'uuid' ? 'gen_random_uuid()' : 'gen_random_uuid()::varchar';
+      await queryRunner.query(`ALTER TABLE "${table}" ALTER COLUMN "id" SET DEFAULT ${defaultExpr}`);
     }
   }
 
