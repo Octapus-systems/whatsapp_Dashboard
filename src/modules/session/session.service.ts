@@ -280,13 +280,19 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
           reconnectState.attempts = 0;
         }
 
-        void this.sessionRepository.update(id, {
-          status: SessionStatus.READY,
-          phone,
-          pushName,
-          connectedAt: new Date(),
-          lastActiveAt: new Date(),
-        });
+        void (async () => {
+          await this.sessionRepository.update(id, {
+            status: SessionStatus.READY,
+            phone,
+            pushName,
+            connectedAt: new Date(),
+            lastActiveAt: new Date(),
+          });
+          // Emit real-time event to connected WebSocket clients so the
+          // dashboard flips from "Starting..." to "Connected" without a
+          // manual page refresh.
+          this.eventsGateway.emitSessionStatus(id, SessionStatus.READY, { phone, pushName });
+        })();
       },
       onMessage: (message): void => {
         this.logger.log(`📩 Incoming message from ${message.from} | type=${message.type} | id=${message.id}`, {
