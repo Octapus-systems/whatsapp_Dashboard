@@ -236,6 +236,8 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
     });
     this.engines.set(id, engine);
 
+    await this.updateStatus(id, SessionStatus.INITIALIZING);
+
     await engine.initialize({
       onQRCode: (qrCode: string): void => {
         this.logger.log('QR code generated', {
@@ -424,7 +426,6 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
       },
     });
 
-    await this.updateStatus(id, SessionStatus.INITIALIZING);
   }
 
   private scheduleReconnect(id: string, session: Session): void {

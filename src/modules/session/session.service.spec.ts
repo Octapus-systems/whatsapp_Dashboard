@@ -260,6 +260,28 @@ describe('SessionService', () => {
       );
     });
 
+    it('should not overwrite READY status after engine initialization resolves', async () => {
+      const session = createMockSession();
+      (repository.findOne as jest.Mock).mockResolvedValue(session);
+      (repository.update as jest.Mock).mockResolvedValue({ affected: 1 });
+      mockEngine.initialize.mockImplementation(async callbacks => {
+        callbacks.onReady('919999999999', 'Test User');
+      });
+
+      await service.start('sess-uuid-1');
+      await Promise.resolve();
+
+      const updates = (repository.update as jest.Mock).mock.calls.filter(call => call[0] === 'sess-uuid-1');
+      expect(updates[0][1]).toEqual({ status: SessionStatus.INITIALIZING });
+      expect(updates[updates.length - 1][1]).toEqual(
+        expect.objectContaining({
+          status: SessionStatus.READY,
+          phone: '919999999999',
+          pushName: 'Test User',
+        }),
+      );
+    });
+
     it('should emit QR code events when the engine generates a QR', async () => {
       const session = createMockSession();
       (repository.findOne as jest.Mock).mockResolvedValue(session);

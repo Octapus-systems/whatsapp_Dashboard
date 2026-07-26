@@ -25,9 +25,19 @@ interface WebSocketEvents {
   onMessage?: (event: MessageEvent) => void;
 }
 
-// Use current origin for WebSocket (goes through nginx proxy in Docker)
-// Falls back to env var or localhost for development
-const SOCKET_URL = import.meta.env.VITE_WS_URL || window.location.origin;
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_WS_URL) {
+    return import.meta.env.VITE_WS_URL;
+  }
+
+  if (import.meta.env.VITE_API_URL) {
+    return new URL(import.meta.env.VITE_API_URL, window.location.origin).origin;
+  }
+
+  return window.location.origin;
+};
+
+const SOCKET_URL = getSocketUrl();
 
 /**
  * React hook that manages a single persistent Socket.IO connection to the

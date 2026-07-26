@@ -198,7 +198,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...options.headers,
   };
 
-  const response = await fetch(url, { ...options, headers });
+  const response = await fetch(url, { cache: 'no-store', ...options, headers });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: response.statusText }));
