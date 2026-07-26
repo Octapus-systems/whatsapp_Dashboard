@@ -2,6 +2,7 @@
 // Centralized API client with TypeScript types
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const RETRYABLE_FETCH_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 // =============================================================================
 // Types
@@ -186,6 +187,26 @@ export interface Settings {
 // API Client
 // =============================================================================
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function fetchWithRetry(url: string, options: RequestInit): Promise<Response> {
+  const method = (options.method || 'GET').toUpperCase();
+  const maxAttempts = RETRYABLE_FETCH_METHODS.has(method) ? 3 : 1;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fetch(url, options);
+    } catch (error) {
+      if (attempt === maxAttempts) {
+        throw error;
+      }
+      await sleep(attempt * 1500);
+    }
+  }
+
+  throw new Error('Failed to fetch');
+}
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
@@ -198,7 +219,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...options.headers,
   };
 
-  const response = await fetch(url, { cache: 'no-store', ...options, headers });
+  const response = await fetchWithRetry(url, { cache: 'no-store', ...options, headers });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: response.statusText }));
