@@ -3,6 +3,7 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 const RETRYABLE_FETCH_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const REQUEST_TIMEOUT_MS = 20_000;
 
 // =============================================================================
 // Types
@@ -194,13 +195,26 @@ async function fetchWithRetry(url: string, options: RequestInit): Promise<Respon
   const maxAttempts = RETRYABLE_FETCH_METHODS.has(method) ? 3 : 1;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    if (options.signal) {
+      if (options.signal.aborted) {
+        controller.abort();
+      } else {
+        options.signal.addEventListener('abort', () => controller.abort(), { once: true });
+      }
+    }
+
     try {
-      return await fetch(url, options);
+      return await fetch(url, { ...options, signal: controller.signal });
     } catch (error) {
       if (attempt === maxAttempts) {
         throw error;
       }
       await sleep(attempt * 1500);
+    } finally {
+      window.clearTimeout(timeout);
     }
   }
 
