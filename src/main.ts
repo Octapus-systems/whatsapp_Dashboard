@@ -90,7 +90,7 @@ async function bootstrap() {
           connectSrc: ["'self'"],
           fontSrc: ["'self'"],
           objectSrc: ["'none'"],
-          upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
+          upgradeInsecureRequests: process.env.FORCE_HTTPS === 'true' ? [] : null,
         },
       },
       hsts: {

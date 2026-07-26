@@ -119,6 +119,9 @@ if (process.env.QUEUE_ENABLED === 'true') {
             migrationsRun: true,
             retryAttempts: 10,
             retryDelay: 3000,
+            ssl: configService.get<boolean>('dataDatabase.ssl', false)
+              ? { rejectUnauthorized: configService.get<boolean>('dataDatabase.sslRejectUnauthorized', true) }
+              : false,
             extra: {
               max: configService.get<number>('dataDatabase.poolSize', 10),
             },

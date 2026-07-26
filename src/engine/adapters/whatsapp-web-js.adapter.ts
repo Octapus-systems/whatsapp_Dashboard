@@ -52,6 +52,8 @@ export interface WhatsAppWebJsConfig {
 }
 
 export class WhatsAppWebJsAdapter extends EventEmitter implements IWhatsAppEngine {
+  private static readonly CLIENT_OPERATION_TIMEOUT_MS = 30_000;
+
   private client: Client | null = null;
   private status: EngineStatus = EngineStatus.DISCONNECTED;
   private qrCode: string | null = null;
@@ -379,8 +381,7 @@ export class WhatsAppWebJsAdapter extends EventEmitter implements IWhatsAppEngin
   }
 
   async sendTextMessage(chatId: string, text: string): Promise<MessageResult> {
-    this.ensureReady();
-    const msg = await this.client!.sendMessage(chatId, text);
+    const msg = await this.runClientOperation('send text message', client => client.sendMessage(chatId, text));
     return {
       id: msg.id._serialized,
       timestamp: msg.timestamp,
@@ -432,8 +433,7 @@ export class WhatsAppWebJsAdapter extends EventEmitter implements IWhatsAppEngin
   }
 
   async getContacts(): Promise<Contact[]> {
-    this.ensureReady();
-    const contacts = await this.client!.getContacts();
+    const contacts = await this.runClientOperation('load contacts', client => client.getContacts());
 
     // WhatsApp Web.js can return the same contact more than once (e.g. phone-book
     // entry duplicated as a linked-device / status contact). Deduplicate by the
@@ -481,8 +481,7 @@ export class WhatsAppWebJsAdapter extends EventEmitter implements IWhatsAppEngin
   }
 
   async getGroups(): Promise<Group[]> {
-    this.ensureReady();
-    const chats = await this.client!.getChats();
+    const chats = await this.runClientOperation('load groups', client => client.getChats());
 
     // Filter only group chats and deduplicate by serialised JID
     const seen = new Set<string>();
@@ -1041,6 +1040,48 @@ export class WhatsAppWebJsAdapter extends EventEmitter implements IWhatsAppEngin
   }
 
   /* eslint-enable @typescript-eslint/require-await, @typescript-eslint/no-unused-vars */
+
+  /**
+   * Calls into the WhatsApp Web page with a bounded wait.  A Chromium page can
+   * be aborted without whatsapp-web.js emitting its `disconnected` event. In
+   * that state the persisted session incorrectly remains READY and every API
+   * call either hangs or fails with "signal is aborted without reason".
+   */
+  private async runClientOperation<T>(
+    operationName: string,
+    operation: (client: Client) => Promise<T>,
+  ): Promise<T> {
+    this.ensureReady();
+
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        operation(this.client!),
+        new Promise<T>((_, reject) => {
+          timeout = setTimeout(
+            () => reject(new Error(`WhatsApp client timed out while attempting to ${operationName}`)),
+            WhatsAppWebJsAdapter.CLIENT_OPERATION_TIMEOUT_MS,
+          );
+        }),
+      ]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (this.isUnusableClientError(message)) {
+        this.logger.warn(`WhatsApp client became unavailable while attempting to ${operationName}: ${message}`);
+        if (this.status !== EngineStatus.DISCONNECTED) {
+          this.setStatus(EngineStatus.DISCONNECTED);
+          this.callbacks.onDisconnected?.(`client operation failed: ${message}`);
+        }
+      }
+      throw error;
+    } finally {
+      if (timeout) clearTimeout(timeout);
+    }
+  }
+
+  private isUnusableClientError(message: string): boolean {
+    return /signal is aborted|timed out while attempting|target closed|session closed|execution context was destroyed|detached frame|protocol error/i.test(message);
+  }
 
   private ensureReady(): void {
     if (this.status !== EngineStatus.READY || !this.client) {
