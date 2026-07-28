@@ -96,11 +96,35 @@ export class WhatsAppWebJsAdapter extends EventEmitter implements IWhatsAppEngin
         );
       }
 
+      // Without a pin, the client rides whatever WhatsApp Web build Meta serves
+      // that day. When Meta moves the internals this library injects against,
+      // sending breaks with an opaque minified error and nothing changed on our
+      // side. Pinning to a known-good archived build makes that failure opt-in.
+      // Set WA_WEB_VERSION to a filename (minus .html) from:
+      //   https://github.com/wppconnect-team/wa-version/tree/main/html
+      const webVersion = process.env.WA_WEB_VERSION?.trim();
+      if (webVersion) {
+        this.logger.log(`Pinning WhatsApp Web version to ${webVersion}`);
+      }
+
       this.client = new Client({
         authStrategy: new LocalAuth({
           clientId: this.config.sessionId,
           dataPath: path.resolve(this.config.sessionDataPath),
         }),
+        ...(webVersion
+          ? {
+              webVersion,
+              webVersionCache: {
+                type: 'remote',
+                remotePath:
+                  'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/{version}.html',
+                // Fail loudly rather than silently falling back to the live
+                // version, which is the thing we're pinning away from.
+                strict: true,
+              },
+            }
+          : {}),
         puppeteer: {
           headless: this.config.puppeteer?.headless ?? true,
           args: puppeteerArgs,

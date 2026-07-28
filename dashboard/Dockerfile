@@ -2,8 +2,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy package files (.npmrc carries legacy-peer-deps, which npm ci needs)
+COPY package*.json .npmrc ./
 
 # Install dependencies
 RUN npm ci

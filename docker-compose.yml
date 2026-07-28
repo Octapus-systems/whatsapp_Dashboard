@@ -47,6 +47,7 @@ services:
       - SESSION_DATA_PATH=/app/data/sessions
       - PUPPETEER_HEADLESS=${PUPPETEER_HEADLESS:-true}
       - PUPPETEER_ARGS=${PUPPETEER_ARGS:---no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage,--disable-gpu}
+      - WA_WEB_VERSION=${WA_WEB_VERSION:-}
       # Storage
       - STORAGE_TYPE=${STORAGE_TYPE:-local}
       - STORAGE_LOCAL_PATH=/app/data/media
