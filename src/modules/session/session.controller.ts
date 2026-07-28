@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, HttpCode, HttpStatus, Header } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { SessionService } from './session.service';
 import { CreateSessionDto, SessionResponseDto, QRCodeResponseDto } from './dto';
@@ -59,6 +59,25 @@ export class SessionController {
   async findAll(): Promise<SessionResponseDto[]> {
     const sessions = await this.sessionService.findAll();
     return sessions.map(s => this.transformSession(s));
+  }
+
+  @Get('stats/overview')
+  @ApiOperation({
+    summary: 'Get session statistics for multi-session monitoring',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Session statistics including counts and memory usage',
+  })
+  async getStats(): Promise<{
+    total: number;
+    active: number;
+    ready: number;
+    disconnected: number;
+    byStatus: Record<string, number>;
+    memoryUsage: { heapUsed: number; heapTotal: number; rss: number };
+  }> {
+    return this.sessionService.getStats();
   }
 
   @Get(':id')
@@ -133,6 +152,9 @@ export class SessionController {
   }
 
   @Get(':id/qr')
+  @Header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  @Header('Pragma', 'no-cache')
+  @Header('Expires', '0')
   @ApiOperation({ summary: 'Get QR code for session authentication' })
   @ApiParam({ name: 'id', description: 'Session ID' })
   @ApiResponse({
@@ -166,22 +188,4 @@ export class SessionController {
     return this.sessionService.getGroups(id);
   }
 
-  @Get('stats/overview')
-  @ApiOperation({
-    summary: 'Get session statistics for multi-session monitoring',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Session statistics including counts and memory usage',
-  })
-  async getStats(): Promise<{
-    total: number;
-    active: number;
-    ready: number;
-    disconnected: number;
-    byStatus: Record<string, number>;
-    memoryUsage: { heapUsed: number; heapTotal: number; rss: number };
-  }> {
-    return this.sessionService.getStats();
-  }
 }

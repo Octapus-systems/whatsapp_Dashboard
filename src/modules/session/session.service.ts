@@ -218,7 +218,16 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
       baseDelay: config?.reconnectBaseDelay ?? 5000,
     });
 
-    await this.initializeEngine(id, session);
+    void this.initializeEngine(id, session).catch(error => {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to initialize session engine', errorMessage, {
+        sessionId: id,
+        action: 'engine_init_failed',
+      });
+      this.engines.delete(id);
+      void this.updateStatus(id, SessionStatus.FAILED);
+    });
+    await this.updateStatus(id, SessionStatus.INITIALIZING);
     return this.findOne(id);
   }
 
@@ -235,6 +244,8 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
       proxyType: session.proxyType || undefined,
     });
     this.engines.set(id, engine);
+
+    await this.updateStatus(id, SessionStatus.INITIALIZING);
 
     await engine.initialize({
       onQRCode: (qrCode: string): void => {
@@ -424,7 +435,6 @@ export class SessionService implements OnModuleDestroy, OnModuleInit {
       },
     });
 
-    await this.updateStatus(id, SessionStatus.INITIALIZING);
   }
 
   private scheduleReconnect(id: string, session: Session): void {

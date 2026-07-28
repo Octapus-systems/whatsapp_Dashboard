@@ -8,7 +8,11 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    plan: starter  # upgrade to standard for persistent disk
+    plan: starter  # persistent disks require a paid Render web service
+    disk:
+      name: openwa-data
+      mountPath: /var/openwa/data
+      sizeGB: 1
     healthCheckPath: /api/health
     envVars:
       # Core
@@ -29,7 +33,7 @@ services:
       - key: ENGINE_TYPE
         value: whatsapp-web.js
       - key: SESSION_DATA_PATH
-        value: ./data/sessions
+        value: /var/openwa/data/sessions
       - key: PUPPETEER_HEADLESS
         value: "true"
       - key: PUPPETEER_ARGS
@@ -77,7 +81,7 @@ services:
       - key: STORAGE_TYPE
         value: local
       - key: STORAGE_LOCAL_PATH
-        value: ./data/media
+        value: /var/openwa/data/media
       - key: MINIO_BUILTIN
         value: "false"
 
@@ -99,7 +103,7 @@ services:
       - key: PLUGINS_ENABLED
         value: "true"
       - key: PLUGINS_DIR
-        value: ./data/plugins
+        value: /var/openwa/data/plugins
 
       # Dashboard
       - key: DASHBOARD_ENABLED
