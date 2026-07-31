@@ -1,10 +1,10 @@
-# OpenWA Dashboard
+# Wirebot Dashboard
 
 <p align="center">
-  <img src="../docs/logo/openwa_logo.webp" alt="OpenWA Logo" width="120"/>
+  <img src="../docs/logo/wirebot_logo.webp" alt="Wirebot Logo" width="120"/>
 </p>
 
-Modern web dashboard for managing OpenWA WhatsApp API Gateway sessions, webhooks, and infrastructure.
+Modern web dashboard for managing Wirebot WhatsApp API Gateway sessions, webhooks, and infrastructure.
 
 ## ✨ Features
 
@@ -78,7 +78,7 @@ dashboard/
 
 ## 🔗 API Connection
 
-The dashboard connects to the OpenWA API backend. Configure the API URL in environment variables:
+The dashboard connects to the Wirebot API backend. Configure the API URL in environment variables:
 
 ```bash
 VITE_API_URL=http://localhost:2785
@@ -86,4 +86,4 @@ VITE_API_URL=http://localhost:2785
 
 ## 📄 License
 
-MIT License - Part of the [OpenWA](https://github.com/rmyndharis/OpenWA) project.
+MIT License - Part of the [Wirebot](https://github.com/rmyndharis/Wirebot) project.

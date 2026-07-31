@@ -1,4 +1,4 @@
-# OpenWA - Dockerfile
+# Wirebot - Dockerfile
 # Multi-stage build for production-ready image
 
 # ===== Stage 1: Builder =====
@@ -58,7 +58,7 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 # Create app user for security
-RUN groupadd -r openwa && useradd -r -g openwa openwa
+RUN groupadd -r wirebot && useradd -r -g wirebot wirebot
 
 WORKDIR /app
 
@@ -74,11 +74,11 @@ COPY --from=builder /app/dashboard/dist ./dashboard/dist
 
 # Create data directories with proper permissions
 RUN mkdir -p ./data/sessions ./data/media && \
-    chown -R openwa:openwa /app
+    chown -R wirebot:wirebot /app
 
 # Note: Running as root to allow Docker socket access for orchestration
 # For production with stricter security, consider using a Docker socket proxy
-# USER openwa
+# USER wirebot
 
 # Expose port
 EXPOSE 2785

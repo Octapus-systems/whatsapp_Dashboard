@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
 
-const THEME_KEY = 'openwa_theme';
+const THEME_KEY = 'wirebot_theme';
 
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>(() => {

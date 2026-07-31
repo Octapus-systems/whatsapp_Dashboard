@@ -1,9 +1,9 @@
-# OpenWA Project Architecture Document
+# Wirebot Project Architecture Document
 
 ## 1. Executive Summary
 
 ### 1.1 What the Application Does
-**OpenWA** is a free, self-hosted, and 100% open-source WhatsApp API Gateway that provides an HTTP REST API for WhatsApp integration. It enables developers and businesses to connect their WhatsApp accounts and automate messaging, contacts, groups, and status updates through standardized web services.
+**Wirebot** is a free, self-hosted, and 100% open-source WhatsApp API Gateway that provides an HTTP REST API for WhatsApp integration. It enables developers and businesses to connect their WhatsApp accounts and automate messaging, contacts, groups, and status updates through standardized web services.
 
 ### 1.2 Target Users
 - **Developers:** Looking for a self-hosted, developer-friendly WhatsApp API wrapper with no feature gates or usage-based pricing.
@@ -12,7 +12,7 @@
 - **Agencies:** Managing multiple customer WhatsApp numbers under a single server installation.
 
 ### 1.3 Business Problem Solved
-Paid gateways (e.g., WAHA Plus, Green API, Whapi.cloud) impose significant monthly per-session subscription costs and paywall critical production features such as PostgreSQL support, multi-session capabilities, and webhook management. OpenWA solves this by delivering an enterprise-ready, open-source alternative under the MIT license, keeping all operational data self-hosted and free from vendor lock-in.
+Paid gateways (e.g., WAHA Plus, Green API, Whapi.cloud) impose significant monthly per-session subscription costs and paywall critical production features such as PostgreSQL support, multi-session capabilities, and webhook management. Wirebot solves this by delivering an enterprise-ready, open-source alternative under the MIT license, keeping all operational data self-hosted and free from vendor lock-in.
 
 ### 1.4 Core Value Proposition
 - **100% Free & Unlimited:** No paywalled features, session limits, or hidden fees.
@@ -28,10 +28,10 @@ To become the premier self-hosted, open-source API gateway for WhatsApp integrat
 ## 2. Product Story
 
 ### 2.1 Why this Application Exists
-Many businesses need to automate messaging (sending order confirmations, reminders, customer support alerts) over WhatsApp, which has over 2 billion active global users. However, Meta's official WhatsApp Business API has restrictive templates, approval bottlenecks, and variable messaging costs. Unofficial API gateways arose to bridge this gap, but the dominant options are closed-source and highly expensive. OpenWA was created to democratize self-hosted WhatsApp automation by providing a transparent, extensible, and free alternative.
+Many businesses need to automate messaging (sending order confirmations, reminders, customer support alerts) over WhatsApp, which has over 2 billion active global users. However, Meta's official WhatsApp Business API has restrictive templates, approval bottlenecks, and variable messaging costs. Unofficial API gateways arose to bridge this gap, but the dominant options are closed-source and highly expensive. Wirebot was created to democratize self-hosted WhatsApp automation by providing a transparent, extensible, and free alternative.
 
 ### 2.2 Typical User (Operator) Journey
-1. **Deployment:** The developer boots OpenWA via Docker Compose.
+1. **Deployment:** The developer boots Wirebot via Docker Compose.
 2. **Access:** They log into the Web Dashboard at `http://localhost:2886` using the automatically seeded default administrator API key.
 3. **Session Creation:** The operator creates a session (e.g., `"support-line"`) and clicks **Start**.
 4. **Authentication:** The dashboard displays a dynamically refreshed QR code. The operator scans it using their physical phone's WhatsApp application under "Linked Devices".
@@ -39,8 +39,8 @@ Many businesses need to automate messaging (sending order confirmations, reminde
 
 ### 2.3 End-to-End Workflow Example: Customer Alerting
 - A customer submits an order on a Shopify e-commerce store.
-- The store backend fires a POST request to OpenWA: `/api/sessions/support-line/messages/send-text` with the payload `{"chatId": "123456789@c.us", "text": "Hi Bob, your order #1001 is confirmed!"}`.
-- OpenWA validates the API Key, queries the active Puppeteer instance for the `"support-line"` session, and routes the message payload down to the headless browser.
+- The store backend fires a POST request to Wirebot: `/api/sessions/support-line/messages/send-text` with the payload `{"chatId": "123456789@c.us", "text": "Hi Bob, your order #1001 is confirmed!"}`.
+- Wirebot validates the API Key, queries the active Puppeteer instance for the `"support-line"` session, and routes the message payload down to the headless browser.
 - Puppeteer executes WhatsApp Web client-side code, dispatching the message over WebSocket directly to WhatsApp servers.
 - The customer receives the message on their phone.
 
@@ -54,7 +54,7 @@ Many businesses need to automate messaging (sending order confirmations, reminde
 
 ## 3. System Architecture
 
-OpenWA adopts a **layered, pluggable architecture** that separates API presentation, core application management, engine runtime abstraction, and pluggable storage adapters.
+Wirebot adopts a **layered, pluggable architecture** that separates API presentation, core application management, engine runtime abstraction, and pluggable storage adapters.
 
 ### 3.1 High-Level Architecture Diagram
 
@@ -66,7 +66,7 @@ flowchart TB
         C3[n8n Automation Workflows]
     end
     
-    subgraph OpenWA["OpenWA Gateway Application"]
+    subgraph Wirebot["Wirebot Gateway Application"]
         subgraph API["API & Presentation Layer"]
             REST[REST API - NestJS]
             WS[Socket.io Gateway]
@@ -157,10 +157,10 @@ The system is split into two packages under a single git repository: the **NestJ
 
 ## 6. Folder Structure Analysis
 
-OpenWA is structured as a monorepo setup but optimized for simple deployment, separating the server and client assets clearly.
+Wirebot is structured as a monorepo setup but optimized for simple deployment, separating the server and client assets clearly.
 
 ```
-openwa/
+wirebot/
 ├── src/                                 # NestJS Application Source
 │   ├── main.ts                          # Bootstrap script & safety overrides
 │   ├── app.module.ts                    # Root module (initiates DBs, queues, modules)
@@ -200,7 +200,7 @@ openwa/
 
 ## 7. Database Design
 
-OpenWA relies on a **dual-database design** to divide critical authentication/audit data from transactional user data, ensuring high boot reliability.
+Wirebot relies on a **dual-database design** to divide critical authentication/audit data from transactional user data, ensuring high boot reliability.
 
 ### 7.1 Entity Relationship Diagram
 
@@ -378,7 +378,7 @@ erDiagram
 
 ## 9. Authentication & Authorization
 
-OpenWA enforces a strict security guard layer using hashed API keys and hierarchical RBAC rules.
+Wirebot enforces a strict security guard layer using hashed API keys and hierarchical RBAC rules.
 
 ### 9.1 Authentication Guard Architecture
 Requests must provide a key via the `X-API-Key` header or as a Bearer token in the `Authorization` header.
@@ -386,7 +386,7 @@ Requests must provide a key via the `X-API-Key` header or as a Bearer token in t
 - **Seeding:** On first launch, if zero keys exist, the `AuthService` writes a default admin key (prefixed with `owa_k1_` in production, or using the fallback `dev-admin-key` in dev) and persists it locally to `data/.api-key`.
 
 ### 9.2 Permissions Hierarchy
-OpenWA supports three roles:
+Wirebot supports three roles:
 
 ```
 [ viewer ]  ◄── (Can only perform GET requests, view status)
@@ -441,7 +441,7 @@ flowchart LR
   - Executes the `message:received` hooks pipeline.
   - Persists the record to `messages` table.
   - Runs the Webhook dispatcher. If `queue.enabled=true`, pushes it to BullMQ to guarantee deliveries using exponential backoff retry.
-  - Calculates HMAC signatures using the webhook endpoint secret: `X-OpenWA-Signature: sha256=<hex_hash>`.
+  - Calculates HMAC signatures using the webhook endpoint secret: `X-Wirebot-Signature: sha256=<hex_hash>`.
 
 ---
 
@@ -492,7 +492,7 @@ Headless browser processes consume significant CPU and RAM.
 
 ## 14. Deployment Architecture
 
-OpenWA supports single-node deployments and scales out media storage and database workloads for production environments.
+Wirebot supports single-node deployments and scales out media storage and database workloads for production environments.
 
 ### 14.1 Production Multi-Instance Setup Diagram
 
@@ -503,8 +503,8 @@ flowchart TB
     end
     
     subgraph Nodes["Application Servers"]
-        API1[OpenWA App Instance 1]
-        API2[OpenWA App Instance 2]
+        API1[Wirebot App Instance 1]
+        API2[Wirebot App Instance 2]
     end
     
     subgraph Shared["Shared Infrastructures"]
@@ -551,7 +551,7 @@ The production stack uses `docker-compose.yml` configurations with profiles:
 
 ## 16. Future Scalability Plan
 
-To scale OpenWA from small environments to enterprise workloads, the following steps are planned:
+To scale Wirebot from small environments to enterprise workloads, the following steps are planned:
 
 ### 16.1 Distributed Worker Processes
 Separate the NestJS REST API from the Puppeteer runners:
@@ -600,7 +600,7 @@ Replace base64 QR polling with real-time WebRTC streams to deliver lower latency
 
 | Property | Value |
 |----------|-------|
-| **Project Name** | OpenWA |
+| **Project Name** | Wirebot |
 | **Project Type** | Self-Hosted WhatsApp HTTP API Gateway |
 | **Target Users** | Developers, SMBs, Automation Engineers |
 | **Frontend Stack** | React 19, Vite, Tailwind CSS, Lucide Icons, TanStack Query |
@@ -619,7 +619,7 @@ Replace base64 QR polling with real-time WebRTC streams to deliver lower latency
 ## 20. Final Verdict
 
 ### 20.1 Architecture Score: 8.5 / 10
-OpenWA features a clean, professional architecture that implements solid software engineering patterns.
+Wirebot features a clean, professional architecture that implements solid software engineering patterns.
 
 ### 20.2 Key Strengths
 - **Dual-Database Separation:** Excellent design choice to decouple authentication keys from transactional message tables.
@@ -631,4 +631,4 @@ OpenWA features a clean, professional architecture that implements solid softwar
 - **Synchronous Fallback Execution:** The database storage lacks hot-swap support without manual application restarts.
 
 ### 20.4 Production-Readiness
-**Yes, with precautions.** OpenWA is production-ready for small and medium workloads (up to ~10 concurrent WhatsApp sessions). For large enterprise installations, you must enable PostgreSQL, Redis, S3 storage, and monitor RAM consumption closely.
+**Yes, with precautions.** Wirebot is production-ready for small and medium workloads (up to ~10 concurrent WhatsApp sessions). For large enterprise installations, you must enable PostgreSQL, Redis, S3 storage, and monitor RAM consumption closely.

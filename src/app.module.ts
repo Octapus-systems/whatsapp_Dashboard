@@ -66,7 +66,7 @@ if (process.env.QUEUE_ENABLED === 'true') {
             port: configService.get<number>('dataDatabase.port'),
             username: configService.get<string>('dataDatabase.username'),
             password: configService.get<string>('dataDatabase.password'),
-            database: configService.get<string>('dataDatabase.database', 'openwa'),
+            database: configService.get<string>('dataDatabase.database', 'wirebot'),
             entities,
             synchronize: true, // Safe for auth/audit which have no migrations
             retryAttempts: 10,
@@ -113,7 +113,7 @@ if (process.env.QUEUE_ENABLED === 'true') {
             port: configService.get<number>('dataDatabase.port'),
             username: configService.get<string>('dataDatabase.username'),
             password: configService.get<string>('dataDatabase.password'),
-            database: configService.get<string>('dataDatabase.database', 'openwa'),
+            database: configService.get<string>('dataDatabase.database', 'wirebot'),
             // Never auto-sync Postgres in production; rely on migrations.
             synchronize: configService.get<boolean>('dataDatabase.synchronize', false),
             migrationsRun: true,
@@ -134,7 +134,7 @@ if (process.env.QUEUE_ENABLED === 'true') {
         return {
           ...baseConfig,
           type: 'sqlite' as const,
-          database: configService.get<string>('dataDatabase.database', './data/openwa.sqlite'),
+          database: configService.get<string>('dataDatabase.database', './data/wirebot.sqlite'),
           synchronize: configService.get<boolean>('dataDatabase.synchronize', true),
           migrationsRun: !configService.get<boolean>('dataDatabase.synchronize', true),
         };

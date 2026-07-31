@@ -72,9 +72,9 @@ RUN npm ci --only=production
 COPY --from=build /app/dist ./dist
 
 # Create non-root user
-RUN groupadd -r openwa && useradd -r -g openwa openwa
-RUN chown -R openwa:openwa /app
-USER openwa
+RUN groupadd -r wirebot && useradd -r -g wirebot wirebot
+RUN chown -R wirebot:wirebot /app
+USER wirebot
 
 # Expose port
 EXPOSE 2785
@@ -103,7 +103,7 @@ services:
       - "2785:2785"
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://openwa:openwa@postgres:5432/openwa
+      - DATABASE_URL=postgresql://wirebot:wirebot@postgres:5432/wirebot
       - REDIS_URL=redis://redis:6379
       - API_KEY_MASTER=dev-master-key
     volumes:
@@ -118,9 +118,9 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      - POSTGRES_USER=openwa
-      - POSTGRES_PASSWORD=openwa
-      - POSTGRES_DB=openwa
+      - POSTGRES_USER=wirebot
+      - POSTGRES_PASSWORD=wirebot
+      - POSTGRES_DB=wirebot
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
@@ -157,7 +157,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/rmyndharis/openwa:latest
+    image: ghcr.io/rmyndharis/wirebot:latest
     deploy:
       replicas: 1
       resources:
@@ -315,7 +315,7 @@ jobs:
           username: ${{ secrets.STAGING_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
           script: |
-            cd /opt/openwa
+            cd /opt/wirebot
             docker compose pull
             docker compose up -d
             docker system prune -f
@@ -334,7 +334,7 @@ jobs:
           username: ${{ secrets.PROD_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
           script: |
-            cd /opt/openwa
+            cd /opt/wirebot
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --no-deps app
             docker system prune -f
@@ -348,7 +348,7 @@ jobs:
 flowchart TB
     subgraph Server["Single Server"]
         NGINX[Nginx Reverse Proxy]
-        NGINX --> APP[OpenWA App]
+        NGINX --> APP[Wirebot App]
         APP --> PG[(PostgreSQL)]
         APP --> RD[(Redis)]
         APP --> FS[File Storage]
@@ -370,9 +370,9 @@ flowchart TB
     end
     
     subgraph AppServers["Application Servers"]
-        APP1[OpenWA 1]
-        APP2[OpenWA 2]
-        APP3[OpenWA N]
+        APP1[Wirebot 1]
+        APP2[Wirebot 2]
+        APP3[Wirebot N]
     end
     
     subgraph DataLayer["Data Layer"]
@@ -411,11 +411,11 @@ LOG_FORMAT=json
 # ===========================================
 # Option 1: SQLite (for minimal deployments)
 DATABASE_TYPE=sqlite
-DATABASE_SQLITE_PATH=./data/openwa.db
+DATABASE_SQLITE_PATH=./data/wirebot.db
 
 # Option 2: PostgreSQL (for production)
 # DATABASE_TYPE=postgres
-# DATABASE_URL=postgresql://user:pass@localhost:5432/openwa
+# DATABASE_URL=postgresql://user:pass@localhost:5432/wirebot
 # DATABASE_POOL_MAX=20
 # DATABASE_SSL=false
 
@@ -429,14 +429,14 @@ STORAGE_LOCAL_BASE_URL=/media
 
 # Option 2: S3
 # STORAGE_TYPE=s3
-# STORAGE_S3_BUCKET=openwa-media
+# STORAGE_S3_BUCKET=wirebot-media
 # STORAGE_S3_REGION=ap-southeast-1
 # STORAGE_S3_ACCESS_KEY_ID=your-access-key
 # STORAGE_S3_SECRET_ACCESS_KEY=your-secret-key
 
 # Option 3: MinIO (S3-compatible)
 # STORAGE_TYPE=minio
-# STORAGE_S3_BUCKET=openwa-media
+# STORAGE_S3_BUCKET=wirebot-media
 # STORAGE_S3_ENDPOINT=http://minio:9000
 # STORAGE_S3_ACCESS_KEY_ID=minioadmin
 # STORAGE_S3_SECRET_ACCESS_KEY=minioadmin
@@ -664,7 +664,7 @@ rule_files:
   - 'alerts.yml'
 
 scrape_configs:
-  - job_name: 'openwa'
+  - job_name: 'wirebot'
     static_configs:
       - targets: ['app:2785']
     metrics_path: '/api/metrics'
@@ -683,7 +683,7 @@ scrape_configs:
 ```yaml
 # monitoring/alerts.yml
 groups:
-  - name: openwa-alerts
+  - name: wirebot-alerts
     rules:
       # High Error Rate
       - alert: HighErrorRate
@@ -746,13 +746,13 @@ groups:
 
       # Service Down
       - alert: ServiceDown
-        expr: up{job="openwa"} == 0
+        expr: up{job="wirebot"} == 0
         for: 1m
         labels:
           severity: critical
         annotations:
-          summary: "OpenWA service is down"
-          description: "The OpenWA application is not responding"
+          summary: "Wirebot service is down"
+          description: "The Wirebot application is not responding"
 ```
 
 ### AlertManager Configuration
@@ -780,19 +780,19 @@ route:
 receivers:
   - name: 'slack-notifications'
     slack_configs:
-      - channel: '#openwa-alerts'
+      - channel: '#wirebot-alerts'
         send_resolved: true
 
   - name: 'slack-critical'
     slack_configs:
-      - channel: '#openwa-critical'
+      - channel: '#wirebot-critical'
         send_resolved: true
         title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
         text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
 
   - name: 'slack-warnings'
     slack_configs:
-      - channel: '#openwa-alerts'
+      - channel: '#wirebot-alerts'
         send_resolved: true
         title: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
 ```
@@ -938,10 +938,10 @@ export class MetricsService {
 ### Grafana Dashboard Definition
 
 ```json
-// monitoring/grafana/dashboards/openwa.json
+// monitoring/grafana/dashboards/wirebot.json
 {
-  "title": "OpenWA Dashboard",
-  "uid": "openwa-main",
+  "title": "Wirebot Dashboard",
+  "uid": "wirebot-main",
   "panels": [
     {
       "title": "Active Sessions",
@@ -1036,7 +1036,7 @@ export class AppLoggerService implements LoggerService {
         winston.format.json()
       ),
       defaultMeta: { 
-        service: 'openwa',
+        service: 'wirebot',
         version: process.env.npm_package_version 
       },
       transports: [
@@ -1122,7 +1122,7 @@ set -e
 
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="/backups"
-S3_BUCKET="s3://openwa-backups"
+S3_BUCKET="s3://wirebot-backups"
 
 # Database backup
 echo "Backing up database..."
@@ -1155,8 +1155,8 @@ set -e
 BACKUP_DATE=$1
 
 # Download from S3
-aws s3 cp s3://openwa-backups/database/db_$BACKUP_DATE.dump.gz /tmp/
-aws s3 cp s3://openwa-backups/sessions/sessions_$BACKUP_DATE.tar.gz /tmp/
+aws s3 cp s3://wirebot-backups/database/db_$BACKUP_DATE.dump.gz /tmp/
+aws s3 cp s3://wirebot-backups/sessions/sessions_$BACKUP_DATE.tar.gz /tmp/
 
 # Restore database
 gunzip /tmp/db_$BACKUP_DATE.dump.gz

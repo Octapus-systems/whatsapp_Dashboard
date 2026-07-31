@@ -12,14 +12,14 @@ Delivery acknowledgment status. WhatsApp ACK levels:
 - `played` (4): Media played (audio/video)
 
 ### Adapter
-An interface implementation that provides a specific capability. In OpenWA, adapters are used for:
+An interface implementation that provides a specific capability. In Wirebot, adapters are used for:
 - **Database Adapter**: SQLite, PostgreSQL
 - **Storage Adapter**: Local, S3
 - **Cache Adapter**: Memory, Redis
 - **Engine Adapter**: whatsapp-web.js, Baileys (future)
 
 ### API Key
-Authentication token to access the OpenWA API. Sent via the `X-API-Key` header.
+Authentication token to access the Wirebot API. Sent via the `X-API-Key` header.
 
 ### Auth State
 WhatsApp Web session authentication data stored in the `.wwebjs_auth/` folder. Includes cookies, session storage, and Chrome profile data.
@@ -47,7 +47,7 @@ Unique identifier for a WhatsApp chat:
 - Status: `status@broadcast`
 
 ### Chrome/Chromium
-Browser used by Puppeteer to run WhatsApp Web. OpenWA uses headless Chromium.
+Browser used by Puppeteer to run WhatsApp Web. Wirebot uses headless Chromium.
 
 ### Compose
 Docker Compose - a tool to define and run multi-container Docker applications.
@@ -55,13 +55,13 @@ Docker Compose - a tool to define and run multi-container Docker applications.
 ## D
 
 ### Dashboard
-Web interface to manage OpenWA without using the API directly. Built with React + shadcn/ui.
+Web interface to manage Wirebot without using the API directly. Built with React + shadcn/ui.
 
 ### Dead Letter Queue (DLQ)
 Queue that stores messages that failed after all retry attempts. Used for debugging and manual retry.
 
 ### Docker
-Containerization platform for packaging and deploying applications. OpenWA is distributed as a Docker image.
+Containerization platform for packaging and deploying applications. Wirebot is distributed as a Docker image.
 
 ## E
 
@@ -86,7 +86,7 @@ Design pattern used to create adapter instances based on configuration. Example:
 Unique identifier for a WhatsApp group. Format: `120363123456789@g.us`.
 
 ### GHCR
-GitHub Container Registry - registry for storing Docker images. The OpenWA image is available at `ghcr.io/rmyndharis/openwa`.
+GitHub Container Registry - registry for storing Docker images. The Wirebot image is available at `ghcr.io/rmyndharis/wirebot`.
 
 ## H
 
@@ -132,22 +132,22 @@ Function executed before a request handler in NestJS. Used for logging, authenti
 Object storage server compatible with the S3 API. Can be used as a self-hosted alternative to S3.
 
 ### Multi-session
-Ability to run multiple WhatsApp sessions within a single OpenWA instance.
+Ability to run multiple WhatsApp sessions within a single Wirebot instance.
 
 ## N
 
 ### NestJS
-Node.js framework for building server-side applications. The OpenWA backend is built with NestJS.
+Node.js framework for building server-side applications. The Wirebot backend is built with NestJS.
 
 ### Node.js
-JavaScript runtime used to run OpenWA. Supported version: Node.js 20 LTS.
+JavaScript runtime used to run Wirebot. Supported version: Node.js 20 LTS.
 
 ## O
 
 ### ORM (Object-Relational Mapping)
-Library that maps objects in code to database tables. OpenWA uses TypeORM.
+Library that maps objects in code to database tables. Wirebot uses TypeORM.
 
-### OpenWA
+### Wirebot
 Open-source WhatsApp API gateway. This project.
 
 ## P
@@ -156,7 +156,7 @@ Open-source WhatsApp API gateway. This project.
 Data sent in an HTTP request body or webhook delivery.
 
 ### Plugin
-Extension that can be added to OpenWA to add functionality without modifying the core codebase.
+Extension that can be added to Wirebot to add functionality without modifying the core codebase.
 
 ### PostgreSQL
 Relational database recommended for production deployments with multiple sessions.
@@ -188,7 +188,7 @@ In-memory data store used for:
 - Real-time pub/sub
 
 ### REST API
-Architectural style for APIs used by OpenWA. Uses HTTP methods (GET, POST, PUT, DELETE).
+Architectural style for APIs used by Wirebot. Uses HTTP methods (GET, POST, PUT, DELETE).
 
 ### Retry
 Mechanism to retry failed operations, e.g., webhook delivery.
@@ -196,7 +196,7 @@ Mechanism to retry failed operations, e.g., webhook delivery.
 ## S
 
 ### S3 (Simple Storage Service)
-AWS object storage service. OpenWA supports S3-compatible storage for media files.
+AWS object storage service. Wirebot supports S3-compatible storage for media files.
 
 ### Session
 An instance of a WhatsApp Web connection. One phone number = one session.
@@ -211,7 +211,7 @@ Component library for React used in the dashboard. Built on top of Radix UI.
 Design pattern that allows selecting an algorithm/implementation at runtime. Used for pluggable adapters.
 
 ### Swagger
-API documentation tool. OpenWA provides Swagger UI at `/api/docs`.
+API documentation tool. Wirebot provides Swagger UI at `/api/docs`.
 
 ## T
 
@@ -225,7 +225,7 @@ Library for data fetching and caching in React. Previously known as React Query.
 ORM for TypeScript/JavaScript that supports multiple databases.
 
 ### TypeScript
-Typed superset of JavaScript used for OpenWA development.
+Typed superset of JavaScript used for Wirebot development.
 
 ## V
 
@@ -233,12 +233,12 @@ Typed superset of JavaScript used for OpenWA development.
 Build tool and dev server for frontend. Used for the dashboard.
 
 ### Volume (Docker)
-Persistent storage for Docker containers. OpenWA data is stored in volumes.
+Persistent storage for Docker containers. Wirebot data is stored in volumes.
 
 ## W
 
 ### WAHA
-WhatsApp HTTP API - a similar project that inspired OpenWA. OpenWA is built as an open-source alternative.
+WhatsApp HTTP API - a similar project that inspired Wirebot. Wirebot is built as an open-source alternative.
 
 ### WAL (Write-Ahead Logging)
 SQLite journaling mode that improves concurrency. Recommended for production.
@@ -252,7 +252,7 @@ Protocol for real-time bidirectional communication. Used for:
 - WhatsApp Web protocol (internal)
 
 ### whatsapp-web.js
-Primary Node.js library used by OpenWA to interact with WhatsApp Web. Uses Puppeteer to control the browser.
+Primary Node.js library used by Wirebot to interact with WhatsApp Web. Uses Puppeteer to control the browser.
 
 ## Z
 

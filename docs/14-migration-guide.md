@@ -2,7 +2,7 @@
 
 ## 14.1 Overview
 
-This document provides a comprehensive guide for migrating OpenWA, including:
+This document provides a comprehensive guide for migrating Wirebot, including:
 
 - Database migration (SQLite → PostgreSQL)
 - Version upgrades (v0.1 → v0.2 → v1.0)
@@ -90,7 +90,7 @@ flowchart TD
 
 ### API-Based Migration (Recommended for v0.2+)
 
-OpenWA v0.2+ includes built-in migration API endpoints that leverage the **Dual-Database Architecture**:
+Wirebot v0.2+ includes built-in migration API endpoints that leverage the **Dual-Database Architecture**:
 
 ```bash
 # Step 1: Export all Data DB tables
@@ -115,7 +115,7 @@ curl -X POST 'http://localhost:2785/api/infra/import-data' \
 > [!NOTE]
 > **Dual-Database Architecture**
 >
-> OpenWA separates databases:
+> Wirebot separates databases:
 >
 > - **Main DB** (SQLite): API keys, audit logs - never migrated, always local
 > - **Data DB** (Pluggable): Sessions, webhooks, messages - this is what gets migrated
@@ -145,7 +145,7 @@ curl -X POST 'http://localhost:2785/api/infra/import-data' \
 
 ### Storage Migration (Local ↔ S3/MinIO)
 
-OpenWA v0.2+ supports migrating media files between storage backends:
+Wirebot v0.2+ supports migrating media files between storage backends:
 
 ```bash
 # Step 1: Check current storage file count
@@ -182,7 +182,7 @@ curl -X POST 'http://localhost:2785/api/infra/storage/import' \
 
 ### Redis Migration (Cache)
 
-Redis in OpenWA is used **only for caching** with TTL-based expiration. Cache data is ephemeral and automatically regenerates from the database.
+Redis in Wirebot is used **only for caching** with TTL-based expiration. Cache data is ephemeral and automatically regenerates from the database.
 
 **No migration API needed** - just change configuration:
 
@@ -399,8 +399,8 @@ function getSqliteTables(db: sqlite3.Database): Promise<string[]> {
 
 // CLI Entry point
 const config: MigrationConfig = {
-  sqlitePath: process.env.SQLITE_PATH || './data/openwa.db',
-  postgresUrl: process.env.DATABASE_URL || 'postgresql://user:pass@localhost:5432/openwa',
+  sqlitePath: process.env.SQLITE_PATH || './data/wirebot.db',
+  postgresUrl: process.env.DATABASE_URL || 'postgresql://user:pass@localhost:5432/wirebot',
   batchSize: parseInt(process.env.BATCH_SIZE || '1000'),
 };
 
@@ -422,12 +422,12 @@ migrateSqliteToPostgres(config)
 ### Step-by-Step Migration
 
 ```bash
-# Step 1: Stop OpenWA
+# Step 1: Stop Wirebot
 docker compose down
 
 # Step 2: Backup current data
 cp -r ./data ./data-backup-$(date +%Y%m%d)
-docker exec openwa-db pg_dump -U postgres openwa > backup.sql
+docker exec wirebot-db pg_dump -U postgres wirebot > backup.sql
 
 # Step 3: Setup PostgreSQL (if not exists)
 docker compose -f docker-compose.postgres.yml up -d postgres
@@ -437,7 +437,7 @@ npx ts-node scripts/migrate-sqlite-to-postgres.ts
 
 # Step 5: Update environment
 export DATABASE_ADAPTER=postgresql
-export DATABASE_URL=postgresql://user:pass@localhost:5432/openwa
+export DATABASE_URL=postgresql://user:pass@localhost:5432/wirebot
 
 # Step 6: Verify migration
 psql $DATABASE_URL -c "SELECT COUNT(*) FROM sessions;"
@@ -526,13 +526,13 @@ rsync -avz --progress \
 
 # Copy database record
 echo "📄 Exporting session record..."
-ssh old-server "sqlite3 /data/openwa.db \
+ssh old-server "sqlite3 /data/wirebot.db \
     \"SELECT * FROM sessions WHERE id='${SESSION_ID}'\" \
     -csv" > session_record.csv
 
 # Import to new database
 echo "📥 Importing session record..."
-ssh new-server "sqlite3 /data/openwa.db \
+ssh new-server "sqlite3 /data/wirebot.db \
     \".import session_record.csv sessions\""
 
 # Start new server
@@ -731,7 +731,7 @@ breaking_changes:
 
 set -e
 
-echo "🚀 Upgrading OpenWA v0.1.x → v0.2.x"
+echo "🚀 Upgrading Wirebot v0.1.x → v0.2.x"
 
 # 1. Backup
 echo "📦 Creating backup..."
@@ -748,18 +748,18 @@ docker compose down
 echo "🔄 Running migrations..."
 docker run --rm \
   -v $(pwd)/data:/app/data \
-  -e DATABASE_URL=sqlite:///app/data/openwa.db \
-  ghcr.io/rmyndharis/openwa:0.2.0 \
+  -e DATABASE_URL=sqlite:///app/data/wirebot.db \
+  ghcr.io/rmyndharis/wirebot:0.2.0 \
   npm run migration:run
 
 # 4. Migrate configuration
 echo "⚙️ Migrating configuration..."
 cat > .env.new << 'EOF'
-# OpenWA v0.2.x Configuration
+# Wirebot v0.2.x Configuration
 
 # Database (unchanged if using SQLite)
 DATABASE_ADAPTER=sqlite
-DATABASE_URL=sqlite:./data/openwa.db
+DATABASE_URL=sqlite:./data/wirebot.db
 
 # New in v0.2: API Key Authentication
 API_KEY_ENABLED=true
@@ -793,7 +793,7 @@ curl -f http://localhost:2785/health || exit 1
 
 # 7. Create API key for existing integrations
 echo "🔑 Creating API key..."
-docker exec openwa npm run cli -- create-api-key --name "migrated-key"
+docker exec wirebot npm run cli -- create-api-key --name "migrated-key"
 
 echo "✅ Upgrade complete!"
 echo ""
@@ -831,10 +831,10 @@ breaking_changes:
 
 set -e
 
-echo "🚀 Upgrading OpenWA v0.2.x → v1.0.0"
+echo "🚀 Upgrading Wirebot v0.2.x → v1.0.0"
 
 # Pre-flight checks
-CURRENT_VERSION=$(docker inspect ghcr.io/rmyndharis/openwa --format '{{.Config.Labels.version}}' 2>/dev/null || echo "unknown")
+CURRENT_VERSION=$(docker inspect ghcr.io/rmyndharis/wirebot --format '{{.Config.Labels.version}}' 2>/dev/null || echo "unknown")
 echo "Current version: $CURRENT_VERSION"
 
 # 1. Comprehensive backup
@@ -846,7 +846,7 @@ mkdir -p "$BACKUP_DIR"
 if [ "$DATABASE_ADAPTER" = "postgresql" ]; then
   pg_dump $DATABASE_URL > "$BACKUP_DIR/database.sql"
 else
-  cp ./data/openwa.db "$BACKUP_DIR/"
+  cp ./data/wirebot.db "$BACKUP_DIR/"
 fi
 
 # Backup auth sessions
@@ -887,7 +887,7 @@ echo "🔄 Running migrations..."
 docker run --rm \
   -v $(pwd)/data:/app/data \
   --env-file .env \
-  ghcr.io/rmyndharis/openwa:1.0.0 \
+  ghcr.io/rmyndharis/wirebot:1.0.0 \
   npm run migration:run
 
 # 6. Migrate webhooks to new format
@@ -896,7 +896,7 @@ docker run --rm \
   -v $(pwd)/data:/app/data \
   -v "$BACKUP_DIR/webhooks.json:/tmp/webhooks.json" \
   --env-file .env \
-  ghcr.io/rmyndharis/openwa:1.0.0 \
+  ghcr.io/rmyndharis/wirebot:1.0.0 \
   npm run cli -- migrate-webhooks /tmp/webhooks.json
 
 # 7. Start new version
@@ -959,7 +959,7 @@ if [ -f "$BACKUP_DIR/database.sql" ]; then
     psql $DATABASE_URL < "$BACKUP_DIR/database.sql"
 else
     # SQLite
-    cp "$BACKUP_DIR/openwa.db" ./data/
+    cp "$BACKUP_DIR/wirebot.db" ./data/
 fi
 
 # 3. Restore auth sessions
@@ -1035,7 +1035,7 @@ migration:
     - name: Configure staging webhooks
       command: |
         npm run cli -- set-webhook \
-          --url https://staging-webhook.example.com/openwa \
+          --url https://staging-webhook.example.com/wirebot \
           --events message,status
 
     - name: Set staging limits
@@ -1246,13 +1246,13 @@ async function fullImport(options: ImportOptions): Promise<void> {
 
 ```bash
 # Check database integrity
-sqlite3 ./data/openwa.db "PRAGMA integrity_check;"
+sqlite3 ./data/wirebot.db "PRAGMA integrity_check;"
 
 # Verify auth session files
 ls -la ./data/.wwebjs_auth/session-*/
 
 # Check file permissions
-stat ./data/openwa.db
+stat ./data/wirebot.db
 stat ./data/.wwebjs_auth
 
 # Verify PostgreSQL connection

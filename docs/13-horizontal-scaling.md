@@ -1,6 +1,6 @@
 # 13 - Horizontal Scaling Guide
 
-This guide explains how to deploy OpenWA in a horizontally scaled environment for high availability and increased capacity.
+This guide explains how to deploy Wirebot in a horizontally scaled environment for high availability and increased capacity.
 
 ## 13.1 Architecture Overview
 
@@ -10,10 +10,10 @@ flowchart TB
         NGINX[Nginx/Traefik]
     end
 
-    subgraph Nodes["OpenWA Nodes"]
-        N1[OpenWA Node 1]
-        N2[OpenWA Node 2]
-        N3[OpenWA Node 3]
+    subgraph Nodes["Wirebot Nodes"]
+        N1[Wirebot Node 1]
+        N2[Wirebot Node 2]
+        N3[Wirebot Node 3]
     end
 
     subgraph Storage["Shared Storage"]
@@ -88,8 +88,8 @@ Each node "claims" sessions on startup and releases them on shutdown.
 version: '3.8'
 
 services:
-  openwa:
-    image: ghcr.io/rmyndharis/openwa:0.2.0
+  wirebot:
+    image: ghcr.io/rmyndharis/wirebot:0.2.0
     deploy:
       replicas: 3
       update_config:
@@ -107,8 +107,8 @@ services:
       - NODE_ENV=production
       - DATABASE_TYPE=postgres
       - DATABASE_HOST=postgres
-      - DATABASE_NAME=openwa
-      - DATABASE_USER=openwa
+      - DATABASE_NAME=wirebot
+      - DATABASE_USER=wirebot
       - DATABASE_PASSWORD=${DB_PASSWORD}
       - REDIS_HOST=redis
       - ENABLE_QUEUE=true
@@ -116,7 +116,7 @@ services:
     volumes:
       - sessions:/app/data/sessions
     networks:
-      - openwa-net
+      - wirebot-net
     depends_on:
       - postgres
       - redis
@@ -129,13 +129,13 @@ services:
         constraints:
           - node.role == manager
     environment:
-      - POSTGRES_DB=openwa
-      - POSTGRES_USER=openwa
+      - POSTGRES_DB=wirebot
+      - POSTGRES_USER=wirebot
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - openwa-net
+      - wirebot-net
 
   redis:
     image: redis:7-alpine
@@ -145,7 +145,7 @@ services:
     volumes:
       - redis-data:/data
     networks:
-      - openwa-net
+      - wirebot-net
 
   traefik:
     image: traefik:v3.0
@@ -164,7 +164,7 @@ services:
       - '--entrypoints.web.address=:80'
       - '--entrypoints.websecure.address=:443'
     networks:
-      - openwa-net
+      - wirebot-net
 
 volumes:
   postgres-data:
@@ -172,7 +172,7 @@ volumes:
   sessions:
 
 networks:
-  openwa-net:
+  wirebot-net:
     driver: overlay
 ```
 
@@ -183,14 +183,14 @@ networks:
 docker swarm init
 
 # Deploy stack
-docker stack deploy -c docker-compose.swarm.yml openwa
+docker stack deploy -c docker-compose.swarm.yml wirebot
 
 # Scale up/down
-docker service scale openwa_openwa=5
+docker service scale wirebot_wirebot=5
 
 # Check status
 docker service ls
-docker service ps openwa_openwa
+docker service ps wirebot_wirebot
 ```
 
 ## 13.4 Kubernetes Deployment
@@ -201,7 +201,7 @@ docker service ps openwa_openwa
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: openwa
+  name: wirebot
 ```
 
 ### k8s/configmap.yaml
@@ -210,14 +210,14 @@ metadata:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: openwa-config
-  namespace: openwa
+  name: wirebot-config
+  namespace: wirebot
 data:
   NODE_ENV: 'production'
   DATABASE_TYPE: 'postgres'
   DATABASE_HOST: 'postgres-service'
   DATABASE_PORT: '5432'
-  DATABASE_NAME: 'openwa'
+  DATABASE_NAME: 'wirebot'
   REDIS_HOST: 'redis-service'
   REDIS_PORT: '6379'
   ENABLE_QUEUE: 'true'
@@ -230,11 +230,11 @@ data:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: openwa-secrets
-  namespace: openwa
+  name: wirebot-secrets
+  namespace: wirebot
 type: Opaque
 stringData:
-  DATABASE_USER: openwa
+  DATABASE_USER: wirebot
   DATABASE_PASSWORD: your-secure-password
   ADMIN_API_KEY: your-admin-api-key
   WEBHOOK_SECRET: your-webhook-secret
@@ -246,30 +246,30 @@ stringData:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: openwa
-  namespace: openwa
+  name: wirebot
+  namespace: wirebot
 spec:
-  serviceName: openwa
+  serviceName: wirebot
   replicas: 3
   selector:
     matchLabels:
-      app: openwa
+      app: wirebot
   template:
     metadata:
       labels:
-        app: openwa
+        app: wirebot
     spec:
       containers:
-        - name: openwa
-          image: ghcr.io/rmyndharis/openwa:0.2.0
+        - name: wirebot
+          image: ghcr.io/rmyndharis/wirebot:0.2.0
           ports:
             - containerPort: 3000
               name: http
           envFrom:
             - configMapRef:
-                name: openwa-config
+                name: wirebot-config
             - secretRef:
-                name: openwa-secrets
+                name: wirebot-secrets
           env:
             - name: NODE_ID
               valueFrom:
@@ -313,12 +313,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: openwa-service
-  namespace: openwa
+  name: wirebot-service
+  namespace: wirebot
 spec:
   type: ClusterIP
   selector:
-    app: openwa
+    app: wirebot
   ports:
     - port: 80
       targetPort: 3000
@@ -327,12 +327,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: openwa-headless
-  namespace: openwa
+  name: wirebot-headless
+  namespace: wirebot
 spec:
   clusterIP: None
   selector:
-    app: openwa
+    app: wirebot
   ports:
     - port: 3000
       name: http
@@ -344,29 +344,29 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: openwa-ingress
-  namespace: openwa
+  name: wirebot-ingress
+  namespace: wirebot
   annotations:
     nginx.ingress.kubernetes.io/affinity: 'cookie'
-    nginx.ingress.kubernetes.io/session-cookie-name: 'openwa-session'
+    nginx.ingress.kubernetes.io/session-cookie-name: 'wirebot-session'
     nginx.ingress.kubernetes.io/session-cookie-max-age: '172800'
 spec:
   ingressClassName: nginx
   rules:
-    - host: openwa.example.com
+    - host: wirebot.example.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: openwa-service
+                name: wirebot-service
                 port:
                   number: 80
   tls:
     - hosts:
-        - openwa.example.com
-      secretName: openwa-tls
+        - wirebot.example.com
+      secretName: wirebot-tls
 ```
 
 ### Deploy to Kubernetes
@@ -376,13 +376,13 @@ spec:
 kubectl apply -f k8s/
 
 # Check pods
-kubectl get pods -n openwa
+kubectl get pods -n wirebot
 
 # Check logs
-kubectl logs -f deployment/openwa -n openwa
+kubectl logs -f deployment/wirebot -n wirebot
 
 # Scale
-kubectl scale statefulset openwa --replicas=5 -n openwa
+kubectl scale statefulset wirebot --replicas=5 -n wirebot
 ```
 
 ## 13.5 Load Balancer Configuration
@@ -393,9 +393,9 @@ kubectl scale statefulset openwa --replicas=5 -n openwa
 # traefik/dynamic-scaling.yml
 http:
   routers:
-    openwa:
-      rule: 'Host(`openwa.example.com`)'
-      service: openwa
+    wirebot:
+      rule: 'Host(`wirebot.example.com`)'
+      service: wirebot
       middlewares:
         - sticky-session
 
@@ -403,20 +403,20 @@ http:
     sticky-session:
       headers:
         customResponseHeaders:
-          X-OpenWA-Node: '{{.Node}}'
+          X-Wirebot-Node: '{{.Node}}'
 
   services:
-    openwa:
+    wirebot:
       loadBalancer:
         sticky:
           cookie:
-            name: openwa_node
+            name: wirebot_node
             secure: true
             httpOnly: true
         servers:
-          - url: 'http://openwa-1:2785'
-          - url: 'http://openwa-2:2785'
-          - url: 'http://openwa-3:2785'
+          - url: 'http://wirebot-1:2785'
+          - url: 'http://wirebot-2:2785'
+          - url: 'http://wirebot-3:2785'
         healthCheck:
           path: /api/health
           interval: 10s
@@ -426,20 +426,20 @@ http:
 ### Nginx Upstream Config
 
 ```nginx
-upstream openwa {
+upstream wirebot {
     ip_hash;  # Sticky sessions based on client IP
 
-    server openwa-1:2785 weight=1 max_fails=3 fail_timeout=30s;
-    server openwa-2:2785 weight=1 max_fails=3 fail_timeout=30s;
-    server openwa-3:2785 weight=1 max_fails=3 fail_timeout=30s;
+    server wirebot-1:2785 weight=1 max_fails=3 fail_timeout=30s;
+    server wirebot-2:2785 weight=1 max_fails=3 fail_timeout=30s;
+    server wirebot-3:2785 weight=1 max_fails=3 fail_timeout=30s;
 }
 
 server {
     listen 80;
-    server_name openwa.example.com;
+    server_name wirebot.example.com;
 
     location / {
-        proxy_pass http://openwa;
+        proxy_pass http://wirebot;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -452,7 +452,7 @@ server {
     }
 
     location /api/health {
-        proxy_pass http://openwa;
+        proxy_pass http://wirebot;
         proxy_connect_timeout 5s;
         proxy_read_timeout 5s;
     }
@@ -494,25 +494,25 @@ Tested on 2 vCPU / 4GB RAM nodes:
 ### Prometheus Metrics (Future)
 
 ```yaml
-# prometheus/openwa-rules.yaml
+# prometheus/wirebot-rules.yaml
 groups:
-  - name: openwa
+  - name: wirebot
     rules:
       - alert: HighMemoryUsage
-        expr: container_memory_usage_bytes{container="openwa"} > 1.8e9
+        expr: container_memory_usage_bytes{container="wirebot"} > 1.8e9
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: 'OpenWA node high memory usage'
+          summary: 'Wirebot node high memory usage'
 
       - alert: NodeDown
-        expr: up{job="openwa"} == 0
+        expr: up{job="wirebot"} == 0
         for: 1m
         labels:
           severity: critical
         annotations:
-          summary: 'OpenWA node is down'
+          summary: 'Wirebot node is down'
 ```
 
 ### Health Check Endpoints

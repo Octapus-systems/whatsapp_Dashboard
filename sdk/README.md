@@ -1,6 +1,6 @@
-# OpenWA SDKs
+# Wirebot SDKs
 
-Official client libraries for the OpenWA WhatsApp API Gateway.
+Official client libraries for the Wirebot WhatsApp API Gateway.
 
 > **Note:** These SDKs are scaffolds and will be auto-generated from the OpenAPI spec in the future. They provide a working starting point for community contributions.
 
@@ -13,16 +13,16 @@ npm run build
 ```
 
 ```typescript
-import { OpenWAClient } from '@openwa/sdk';
+import { WirebotClient } from '@wirebot/sdk';
 
-const client = new OpenWAClient({
+const client = new WirebotClient({
   baseUrl: 'http://localhost:2785',
   apiKey: 'your-api-key',
 });
 
 const result = await client.messages.sendText('session-1', {
   chatId: '628123456789@c.us',
-  text: 'Hello from OpenWA SDK!',
+  text: 'Hello from Wirebot SDK!',
 });
 ```
 
@@ -34,15 +34,15 @@ pip install -e .
 ```
 
 ```python
-from openwa import OpenWAClient
+from wirebot import WirebotClient
 
-client = OpenWAClient(
+client = WirebotClient(
     base_url="http://localhost:2785",
     api_key="your-api-key",
 )
 
 result = client.messages.send_text("session-1", {
     "chatId": "628123456789@c.us",
-    "text": "Hello from OpenWA Python SDK!",
+    "text": "Hello from Wirebot Python SDK!",
 })
 ```

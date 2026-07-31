@@ -1,4 +1,4 @@
-// API Service Layer for OpenWA Dashboard
+// API Service Layer for Wirebot Dashboard
 // Centralized API client with TypeScript types
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -225,7 +225,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const url = `${API_BASE_URL}${endpoint}`;
 
   // Get API key from sessionStorage for authentication
-  const apiKey = sessionStorage.getItem('openwa_api_key');
+  const apiKey = sessionStorage.getItem('wirebot_api_key');
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',

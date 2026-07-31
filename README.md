@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/logo/openwa_logo.webp" alt="OpenWA Logo" width="200"/>
+  <img src="docs/logo/wirebot_logo.webp" alt="Wirebot Logo" width="200"/>
 </p>
 
-<h1 align="center">OpenWA</h1>
+<h1 align="center">Wirebot</h1>
 <p align="center">
   <strong>Open Source WhatsApp API Gateway</strong>
 </p>
@@ -26,11 +26,11 @@
 
 ---
 
-## ✨ Why OpenWA?
+## ✨ Why Wirebot?
 
-**OpenWA** is a free, open-source WhatsApp API Gateway designed for developers who need full control over their messaging infrastructure—without vendor lock-in or hidden paywalls.
+**Wirebot** is a free, open-source WhatsApp API Gateway designed for developers who need full control over their messaging infrastructure—without vendor lock-in or hidden paywalls.
 
-Built on a **pluggable architecture**, OpenWA lets you swap database engines (SQLite/PostgreSQL), storage backends (Local/S3), and cache layers (Memory/Redis) without changing a single line of application code.
+Built on a **pluggable architecture**, Wirebot lets you swap database engines (SQLite/PostgreSQL), storage backends (Local/S3), and cache layers (Memory/Redis) without changing a single line of application code.
 
 |                               |                                                              |
 | ----------------------------- | ------------------------------------------------------------ |
@@ -98,8 +98,8 @@ Built on a **pluggable architecture**, OpenWA lets you swap database engines (SQ
 
 ```bash
 # Clone and start
-git clone https://github.com/rmyndharis/OpenWA.git
-cd OpenWA
+git clone https://github.com/rmyndharis/Wirebot.git
+cd Wirebot
 docker compose -f docker-compose.dev.yml up -d
 
 # Access
@@ -112,8 +112,8 @@ docker compose -f docker-compose.dev.yml up -d
 
 ```bash
 # Clone repository
-git clone https://github.com/rmyndharis/OpenWA.git
-cd OpenWA
+git clone https://github.com/rmyndharis/Wirebot.git
+cd Wirebot
 
 # Install dependencies (includes dashboard)
 npm install
@@ -199,7 +199,7 @@ curl -X POST http://localhost:2785/api/sessions/{sessionId}/messages/send-text \
   -H "X-API-Key: YOUR_API_KEY" \
   -d '{
     "chatId": "628123456789@c.us",
-    "text": "Hello from OpenWA!"
+    "text": "Hello from Wirebot!"
   }'
 ```
 
@@ -237,7 +237,7 @@ curl -X POST http://localhost:2785/api/sessions/{sessionId}/webhooks \
 ## 📁 Project Structure
 
 ```
-openwa/
+wirebot/
 ├── src/
 │   ├── main.ts                 # Application entry point
 │   ├── app.module.ts           # Root module
@@ -308,12 +308,12 @@ See [LICENSE](./LICENSE) for details.
 
 <div align="center">
 
-**OpenWA** – Free, Open Source WhatsApp API Gateway
+**Wirebot** – Free, Open Source WhatsApp API Gateway
 
-[📖 Documentation](./docs/README.md) · [🔌 API Docs](http://localhost:2785/api/docs) · [🐛 Report Bug](https://github.com/rmyndharis/OpenWA/issues) · [💡 Request Feature](https://github.com/rmyndharis/OpenWA/issues)
+[📖 Documentation](./docs/README.md) · [🔌 API Docs](http://localhost:2785/api/docs) · [🐛 Report Bug](https://github.com/rmyndharis/Wirebot/issues) · [💡 Request Feature](https://github.com/rmyndharis/Wirebot/issues)
 
 <br/>
 
-<sub>Made with ❤️ by <a href="https://github.com/rmyndharis">Yudhi Armyndharis</a> and the OpenWA Community</sub>
+<sub>Made with ❤️ by <a href="https://github.com/rmyndharis">Jishad</a> and the Wirebot Community</sub>
 
 </div>

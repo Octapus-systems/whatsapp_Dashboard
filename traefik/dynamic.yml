@@ -29,9 +29,9 @@ http:
     api:
       loadBalancer:
         servers:
-          - url: 'http://openwa-api:2785'
+          - url: 'http://wirebot-api:2785'
 
     dashboard:
       loadBalancer:
         servers:
-          - url: 'http://openwa-dashboard:80'
+          - url: 'http://wirebot-dashboard:80'

@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="logo/openwa_logo.webp" alt="OpenWA Logo" width="200"/>
+  <img src="logo/wirebot_logo.webp" alt="Wirebot Logo" width="200"/>
 </p>
 
-<h1 align="center">OpenWA Documentation</h1>
+<h1 align="center">Wirebot Documentation</h1>
 <p align="center">
   <strong>Open Source WhatsApp API Gateway</strong>
 </p>
@@ -53,7 +53,7 @@
 | 19  | [Plugin Architecture](./19-plugin-architecture.md)               | Extensibility concepts                            |
 | 20  | [Community Guidelines](./20-community-guidelines.md)             | Contribution and governance                       |
 | 21  | [Glossary](./21-glossary.md)                                     | Terms and definitions                             |
-| 22  | [n8n Integration](./22-n8n-integration.md)                       | n8n community nodes for OpenWA                    |
+| 22  | [n8n Integration](./22-n8n-integration.md)                       | n8n community nodes for Wirebot                    |
 
 ## Quick Start
 
@@ -61,8 +61,8 @@
 
 ```bash
 # Clone repository
-git clone https://github.com/rmyndharis/OpenWA.git
-cd OpenWA
+git clone https://github.com/rmyndharis/Wirebot.git
+cd Wirebot
 
 # Install & configure
 npm install
@@ -85,8 +85,8 @@ Access:
 
 ```bash
 # Clone repository
-git clone https://github.com/rmyndharis/OpenWA.git
-cd OpenWA
+git clone https://github.com/rmyndharis/Wirebot.git
+cd Wirebot
 
 # Start services
 docker compose up -d
@@ -101,7 +101,7 @@ Access:
 
 ### API Key
 
-OpenWA seeds a default API key on first run and writes it to:
+Wirebot seeds a default API key on first run and writes it to:
 
 - `data/.api-key` (development)
 
@@ -128,7 +128,7 @@ curl http://localhost:2785/api/sessions/{sessionId}/qr \
 curl -X POST http://localhost:2785/api/sessions/{sessionId}/messages/send-text \
   -H "X-API-Key: your-api-key" \
   -H "Content-Type: application/json" \
-  -d '{"chatId": "628123456789@c.us", "text": "Hello from OpenWA!"}'
+  -d '{"chatId": "628123456789@c.us", "text": "Hello from Wirebot!"}'
 ```
 
 ## WebSocket Example (Socket.IO)
@@ -193,7 +193,7 @@ socket.on('message', msg => {
 ## Project Structure
 
 ```
-OpenWA/
+Wirebot/
 ├── src/                    # Backend source code
 ├── dashboard/              # Frontend dashboard
 ├── docker-compose.yml      # Traefik + API + Dashboard
@@ -216,6 +216,6 @@ MIT License.
 
 **Start Reading: [01 - Project Overview](./01-project-overview.md)**
 
-_OpenWA Documentation · Last updated: 2026-02-05_
+_Wirebot Documentation · Last updated: 2026-02-05_
 
 </div>

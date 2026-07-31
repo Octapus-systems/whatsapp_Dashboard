@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/openwa.ts",
+  "app": "npx ts-node --prefer-ts-exts bin/wirebot.ts",
   "watch": {
     "include": ["**"],
     "exclude": ["README.md", "cdk*.json", "**/*.d.ts", "**/*.js", "tsconfig.json", "package*.json", "node_modules"]

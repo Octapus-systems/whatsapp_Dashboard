@@ -1,7 +1,7 @@
 {
-    "name": "@openwa/sdk",
+    "name": "@wirebot/sdk",
     "version": "0.0.1",
-    "description": "Official JavaScript/TypeScript SDK for OpenWA WhatsApp API Gateway",
+    "description": "Official JavaScript/TypeScript SDK for Wirebot WhatsApp API Gateway",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
@@ -14,14 +14,14 @@
         "whatsapp",
         "api",
         "sdk",
-        "openwa",
+        "wirebot",
         "gateway"
     ],
-    "author": "OpenWA Contributors",
+    "author": "Wirebot Contributors",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/openwa/openwa",
+        "url": "https://github.com/wirebot/wirebot",
         "directory": "sdk/javascript"
     },
     "engines": {

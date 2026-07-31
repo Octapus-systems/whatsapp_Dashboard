@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { OpenwaStack } from '../lib/openwa-stack';
+import { OpenwaStack } from '../lib/wirebot-stack';
 
 const app = new cdk.App();
 

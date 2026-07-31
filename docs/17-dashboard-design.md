@@ -2,7 +2,7 @@
 
 ## 17.1 Overview
 
-The dashboard is a web-based management interface for OpenWA that lets users manage sessions, webhooks, and monitor activity without using the API directly.
+The dashboard is a web-based management interface for Wirebot that lets users manage sessions, webhooks, and monitor activity without using the API directly.
 
 ### Tech Stack
 
@@ -23,7 +23,7 @@ flowchart LR
     end
 
     subgraph Backend
-        API[OpenWA API]
+        API[Wirebot API]
         WS[WebSocket]
     end
 
@@ -100,7 +100,7 @@ flowchart TB
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  🔵 OpenWA                              🔍 Search    👤 Admin    ☀️  │
+│  🔵 Wirebot                              🔍 Search    👤 Admin    ☀️  │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  ┌─────────────┬─────────────┬─────────────┬─────────────┐          │
@@ -307,7 +307,7 @@ flowchart TB
 │                                                                      │
 │  ┌───────────────────────────────────────────────────────────────┐  │
 │  │  🔗 Main Webhook                                   ✅ Active   │  │
-│  │  https://api.example.com/webhook/openwa                        │  │
+│  │  https://api.example.com/webhook/wirebot                        │  │
 │  │  Events: message.received, message.ack, session.status         │  │
 │  │  Sessions: All                                                 │  │
 │  │  ──────────────────────────────────────────────────────────── │  │
@@ -1027,7 +1027,7 @@ server {
 
     # API proxy (if needed)
     location /api {
-        proxy_pass http://openwa:2785;
+        proxy_pass http://wirebot:2785;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -1037,7 +1037,7 @@ server {
 
     # WebSocket proxy
     location /ws {
-        proxy_pass http://openwa:2785;
+        proxy_pass http://wirebot:2785;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";

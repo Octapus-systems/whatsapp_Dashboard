@@ -63,7 +63,7 @@ export function useWebSocket(events: WebSocketEvents = {}, sessionId?: string) {
   const connect = useCallback(() => {
     if (socketRef.current?.connected) return;
 
-    const apiKey = sessionStorage.getItem('openwa_api_key');
+    const apiKey = sessionStorage.getItem('wirebot_api_key');
     if (!apiKey) {
       console.warn('[WebSocket] No API key found — skipping connection');
       return;

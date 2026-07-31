@@ -4,7 +4,7 @@
 
 > **Current Status: Minimal Implementation**
 >
-> This document outlines the planned testing strategy for OpenWA. The current implementation includes only foundational tests:
+> This document outlines the planned testing strategy for Wirebot. The current implementation includes only foundational tests:
 >
 > | Test Type | Planned | Actual |
 > |-----------|---------|--------|
@@ -187,7 +187,7 @@ services:
   postgres-test:
     image: postgres:15
     environment:
-      POSTGRES_DB: openwa_test
+      POSTGRES_DB: wirebot_test
       POSTGRES_USER: test
       POSTGRES_PASSWORD: test
     ports:
@@ -616,7 +616,7 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_DB: openwa_test
+          POSTGRES_DB: wirebot_test
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
         ports:
@@ -635,7 +635,7 @@ jobs:
       - run: npm ci
       - run: npm run test:integration
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/openwa_test
+          DATABASE_URL: postgresql://test:test@localhost:5432/wirebot_test
           REDIS_URL: redis://localhost:6379
 
   e2e-tests:

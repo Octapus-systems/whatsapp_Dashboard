@@ -190,7 +190,7 @@
 }
 
 .chat-item-btn.active {
-  background: rgba(37, 211, 102, 0.08); /* OpenWA brand green glow */
+  background: rgba(37, 211, 102, 0.08); /* Wirebot brand green glow */
   border-left: 3px solid var(--primary);
 }
 

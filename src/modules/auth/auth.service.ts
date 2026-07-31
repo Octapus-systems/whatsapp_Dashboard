@@ -60,7 +60,7 @@ export class AuthService implements OnModuleInit {
     this.logger.log('');
     this.logger.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     this.logger.log('');
-    this.logger.log('  🟢 Welcome to OpenWA - WhatsApp API Gateway');
+    this.logger.log('  🟢 Welcome to Wirebot - WhatsApp API Gateway');
     this.logger.log('');
     this.logger.log(`  📊 Dashboard: ${dashboardUrl}`);
     this.logger.log(`  📚 API Docs:  ${apiBaseUrl}/api/docs`);

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/openwa}"
+APP_DIR="${APP_DIR:-/opt/wirebot}"
 REPO_URL="${REPO_URL:-https://github.com/Octapus-systems/whatsapp_Dashboard.git}"
 BRANCH="${BRANCH:-QrCodeandconnecting}"
 

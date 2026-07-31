@@ -1,5 +1,5 @@
 #!/bin/bash
-# OpenWA Smart Orchestration Script
+# Wirebot Smart Orchestration Script
 # Reads .env and activates appropriate Docker profiles
 
 set -e
@@ -101,9 +101,9 @@ validate_engine() {
     exit 1
 }
 
-# Start OpenWA
+# Start Wirebot
 cmd_start() {
-    log_info "Starting OpenWA..."
+    log_info "Starting Wirebot..."
     load_env
     validate_engine
 
@@ -117,21 +117,21 @@ cmd_start() {
     docker compose $profiles up -d
 
     echo ""
-    log_success "OpenWA started successfully!"
+    log_success "Wirebot started successfully!"
     echo ""
     log_info "Dashboard: http://localhost:${DASHBOARD_PORT:-2886}"
     log_info "API: http://localhost:${API_PORT:-2785}"
 }
 
-# Stop OpenWA
+# Stop Wirebot
 cmd_stop() {
-    log_info "Stopping OpenWA..."
+    log_info "Stopping Wirebot..."
     cd "$PROJECT_DIR"
     docker compose --profile postgres --profile redis --profile minio --profile with-dashboard --profile with-proxy down
-    log_success "OpenWA stopped"
+    log_success "Wirebot stopped"
 }
 
-# Restart OpenWA
+# Restart Wirebot
 cmd_restart() {
     cmd_stop
     cmd_start
@@ -139,7 +139,7 @@ cmd_restart() {
 
 # Show status
 cmd_status() {
-    log_info "OpenWA container status:"
+    log_info "Wirebot container status:"
     echo ""
     cd "$PROJECT_DIR"
     docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
@@ -147,7 +147,7 @@ cmd_status() {
 
 # Show logs
 cmd_logs() {
-    local service="${1:-openwa-api}"
+    local service="${1:-wirebot-api}"
     local lines="${2:-100}"
     cd "$PROJECT_DIR"
     docker compose logs -f --tail="$lines" "$service"
@@ -155,7 +155,7 @@ cmd_logs() {
 
 # Build images
 cmd_build() {
-    log_info "Building OpenWA images..."
+    log_info "Building Wirebot images..."
     load_env
     local profiles=$(get_profiles)
     cd "$PROJECT_DIR"
@@ -165,7 +165,7 @@ cmd_build() {
 
 # Update (pull + build + restart)
 cmd_update() {
-    log_info "Updating OpenWA..."
+    log_info "Updating Wirebot..."
     cd "$PROJECT_DIR"
     git pull
     cmd_build
@@ -176,16 +176,16 @@ cmd_update() {
 # Show help
 cmd_help() {
     echo ""
-    echo "OpenWA Smart Orchestration Script"
+    echo "Wirebot Smart Orchestration Script"
     echo ""
     echo "Usage: $0 <command> [options]"
     echo ""
     echo "Commands:"
-    echo "  start       Start OpenWA with auto-detected profiles"
-    echo "  stop        Stop all OpenWA containers"
-    echo "  restart     Restart OpenWA"
+    echo "  start       Start Wirebot with auto-detected profiles"
+    echo "  stop        Stop all Wirebot containers"
+    echo "  restart     Restart Wirebot"
     echo "  status      Show container status"
-    echo "  logs        Show logs (default: openwa-api)"
+    echo "  logs        Show logs (default: wirebot-api)"
     echo "  build       Build Docker images"
     echo "  update      Pull latest code and restart"
     echo "  help        Show this help"

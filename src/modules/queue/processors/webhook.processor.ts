@@ -44,7 +44,7 @@ export class WebhookProcessor extends WorkerHost {
     // Update retry count in headers
     const requestHeaders = {
       ...headers,
-      'X-OpenWA-Retry-Count': String(job.attemptsMade),
+      'X-Wirebot-Retry-Count': String(job.attemptsMade),
     };
 
     try {

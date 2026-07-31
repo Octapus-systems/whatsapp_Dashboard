@@ -2,7 +2,7 @@
 
 ## 18.1 Overview
 
-OpenWA provides official SDKs for multiple programming languages to simplify API integration. This document describes the SDK design and specifications.
+Wirebot provides official SDKs for multiple programming languages to simplify API integration. This document describes the SDK design and specifications.
 
 ### Supported Languages
 
@@ -43,21 +43,21 @@ flowchart TB
 
 ```bash
 # npm
-npm install @openwa/sdk
+npm install @wirebot/sdk
 
 # yarn
-yarn add @openwa/sdk
+yarn add @wirebot/sdk
 
 # pnpm
-pnpm add @openwa/sdk
+pnpm add @wirebot/sdk
 ```
 
 ### Quick Start
 
 ```typescript
-import { OpenWA } from '@openwa/sdk';
+import { Wirebot } from '@wirebot/sdk';
 
-const client = new OpenWA({
+const client = new Wirebot({
   baseUrl: 'http://localhost:2785',
   apiKey: 'your-api-key',
 });
@@ -94,7 +94,7 @@ client.on('session.status', async ({ sessionId, status }) => {
 ```typescript
 // src/index.ts
 
-export interface OpenWAConfig {
+export interface WirebotConfig {
   baseUrl: string;
   apiKey: string;
   timeout?: number;
@@ -102,8 +102,8 @@ export interface OpenWAConfig {
   debug?: boolean;
 }
 
-export class OpenWA extends EventEmitter {
-  private config: OpenWAConfig;
+export class Wirebot extends EventEmitter {
+  private config: WirebotConfig;
   private http: HttpClient;
   private ws: WebSocketClient;
 
@@ -115,7 +115,7 @@ export class OpenWA extends EventEmitter {
   public webhooks: WebhooksResource;
   public apiKeys: ApiKeysResource;
 
-  constructor(config: OpenWAConfig) {
+  constructor(config: WirebotConfig) {
     super();
     this.config = this.validateConfig(config);
     this.http = new HttpClient(this.config);
@@ -419,7 +419,7 @@ export class MessageBuilder {
 ```typescript
 // src/events/index.ts
 
-export interface OpenWAEvents {
+export interface WirebotEvents {
   // Session events
   'session.status': (data: SessionStatusEvent) => void;
   'session.qr': (data: SessionQrEvent) => void;
@@ -454,7 +454,7 @@ export interface MessageAckEvent {
 }
 
 // Usage with typed events
-const client = new OpenWA({ ... });
+const client = new Wirebot({ ... });
 
 client.on('message.received', ({ sessionId, message }) => {
   console.log(`[${sessionId}] New message from ${message.from}: ${message.body}`);
@@ -470,7 +470,7 @@ client.on('message.ack', ({ messageId, ack }) => {
 ```typescript
 // src/errors/index.ts
 
-export class OpenWAError extends Error {
+export class WirebotError extends Error {
   constructor(
     message: string,
     public code: string,
@@ -478,32 +478,32 @@ export class OpenWAError extends Error {
     public details?: unknown,
   ) {
     super(message);
-    this.name = 'OpenWAError';
+    this.name = 'WirebotError';
   }
 }
 
-export class ValidationError extends OpenWAError {
+export class ValidationError extends WirebotError {
   constructor(message: string, details?: unknown) {
     super(message, 'VALIDATION_ERROR', 400, details);
     this.name = 'ValidationError';
   }
 }
 
-export class AuthenticationError extends OpenWAError {
+export class AuthenticationError extends WirebotError {
   constructor(message = 'Invalid API key') {
     super(message, 'AUTHENTICATION_ERROR', 401);
     this.name = 'AuthenticationError';
   }
 }
 
-export class SessionNotFoundError extends OpenWAError {
+export class SessionNotFoundError extends WirebotError {
   constructor(sessionId: string) {
     super(`Session '${sessionId}' not found`, 'SESSION_NOT_FOUND', 404);
     this.name = 'SessionNotFoundError';
   }
 }
 
-export class RateLimitError extends OpenWAError {
+export class RateLimitError extends WirebotError {
   constructor(public retryAfter: number) {
     super(`Rate limited. Retry after ${retryAfter}ms`, 'RATE_LIMIT_EXCEEDED', 429);
     this.name = 'RateLimitError';
@@ -536,17 +536,17 @@ try {
 ### Installation
 
 ```bash
-pip install openwa-sdk
+pip install wirebot-sdk
 ```
 
 ### Quick Start
 
 ```python
-from openwa import OpenWA
+from wirebot import Wirebot
 import asyncio
 
 async def main():
-    client = OpenWA(
+    client = Wirebot(
         base_url="http://localhost:2785",
         api_key="your-api-key"
     )
@@ -573,7 +573,7 @@ asyncio.run(main())
 ### SDK Structure
 
 ```python
-# openwa/__init__.py
+# wirebot/__init__.py
 
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
@@ -608,7 +608,7 @@ class Message:
     status: Optional[str] = None
     is_from_me: bool = False
 
-class OpenWA:
+class Wirebot:
     def __init__(
         self,
         base_url: str,
@@ -647,7 +647,7 @@ class OpenWA:
                 data = await response.json()
 
                 if not response.ok:
-                    raise OpenWAError(
+                    raise WirebotError(
                         message=data.get("error", {}).get("message", "Unknown error"),
                         code=data.get("error", {}).get("code", "UNKNOWN"),
                         status=response.status
@@ -660,7 +660,7 @@ class OpenWA:
 
 
 class SessionsResource:
-    def __init__(self, client: OpenWA):
+    def __init__(self, client: Wirebot):
         self.client = client
 
     async def list(
@@ -721,7 +721,7 @@ class SessionsResource:
 
 
 class MessagesResource:
-    def __init__(self, client: OpenWA):
+    def __init__(self, client: Wirebot):
         self.client = client
 
     async def send(
@@ -777,7 +777,7 @@ class MessagesResource:
         )
 
 
-class OpenWAError(Exception):
+class WirebotError(Exception):
     def __init__(self, message: str, code: str, status: int):
         super().__init__(message)
         self.code = code
@@ -787,16 +787,16 @@ class OpenWAError(Exception):
 ### Sync Wrapper
 
 ```python
-# openwa/sync.py
+# wirebot/sync.py
 
-from .async_client import OpenWA as AsyncOpenWA
+from .async_client import Wirebot as AsyncWirebot
 import asyncio
 
-class OpenWASync:
-    """Synchronous wrapper for OpenWA client"""
+class WirebotSync:
+    """Synchronous wrapper for Wirebot client"""
 
     def __init__(self, **kwargs):
-        self._async_client = AsyncOpenWA(**kwargs)
+        self._async_client = AsyncWirebot(**kwargs)
         self._loop = asyncio.new_event_loop()
 
     def _run(self, coro):
@@ -833,9 +833,9 @@ class SessionsResourceSync:
 
 
 # Usage
-from openwa.sync import OpenWASync
+from wirebot.sync import WirebotSync
 
-client = OpenWASync(base_url="http://localhost:2785", api_key="your-key")
+client = WirebotSync(base_url="http://localhost:2785", api_key="your-key")
 sessions = client.sessions.list()
 ```
 
@@ -844,7 +844,7 @@ sessions = client.sessions.list()
 ### Installation
 
 ```bash
-composer require openwa/sdk
+composer require wirebot/sdk
 ```
 
 ### Quick Start
@@ -852,8 +852,8 @@ composer require openwa/sdk
 ```php
 <?php
 
-use OpenWA\Client;
-use OpenWA\Resources\Messages;
+use Wirebot\Client;
+use Wirebot\Resources\Messages;
 
 $client = new Client([
     'baseUrl' => 'http://localhost:2785',
@@ -882,15 +882,15 @@ echo "Message sent: " . $message->id;
 <?php
 // src/Client.php
 
-namespace OpenWA;
+namespace Wirebot;
 
 use GuzzleHttp\Client as HttpClient;
-use OpenWA\Resources\Sessions;
-use OpenWA\Resources\Messages;
-use OpenWA\Resources\Contacts;
-use OpenWA\Resources\Groups;
-use OpenWA\Resources\Webhooks;
-use OpenWA\Exceptions\OpenWAException;
+use Wirebot\Resources\Sessions;
+use Wirebot\Resources\Messages;
+use Wirebot\Resources\Contacts;
+use Wirebot\Resources\Groups;
+use Wirebot\Resources\Webhooks;
+use Wirebot\Exceptions\WirebotException;
 
 class Client
 {
@@ -933,7 +933,7 @@ class Client
             $data = json_decode($response->getBody()->getContents(), true);
 
             if (!isset($data['success']) || !$data['success']) {
-                throw new OpenWAException(
+                throw new WirebotException(
                     $data['error']['message'] ?? 'Unknown error',
                     $data['error']['code'] ?? 'UNKNOWN',
                     $response->getStatusCode()
@@ -945,7 +945,7 @@ class Client
             $response = $e->getResponse();
             $data = json_decode($response->getBody()->getContents(), true);
 
-            throw new OpenWAException(
+            throw new WirebotException(
                 $data['error']['message'] ?? $e->getMessage(),
                 $data['error']['code'] ?? 'REQUEST_ERROR',
                 $response ? $response->getStatusCode() : 0
@@ -964,10 +964,10 @@ class Client
 <?php
 // src/Resources/Sessions.php
 
-namespace OpenWA\Resources;
+namespace Wirebot\Resources;
 
-use OpenWA\Client;
-use OpenWA\Models\Session;
+use Wirebot\Client;
+use Wirebot\Models\Session;
 
 class Sessions
 {
@@ -1033,10 +1033,10 @@ class Sessions
 <?php
 // src/Resources/Messages.php
 
-namespace OpenWA\Resources;
+namespace Wirebot\Resources;
 
-use OpenWA\Client;
-use OpenWA\Models\Message;
+use Wirebot\Client;
+use Wirebot\Models\Message;
 
 class Messages
 {
@@ -1123,27 +1123,27 @@ class Messages
 ### Installation
 
 ```bash
-npm install @rmyndharis/n8n-nodes-openwa
+npm install @rmyndharis/n8n-nodes-wirebot
 ```
 
 ### Node Configuration
 
 ```typescript
-// nodes/OpenWA/OpenWA.node.ts
+// nodes/Wirebot/Wirebot.node.ts
 
 import { IExecuteFunctions, INodeExecutionData, INodeType, INodeTypeDescription } from 'n8n-workflow';
 
-export class OpenWA implements INodeType {
+export class Wirebot implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'OpenWA',
+    displayName: 'Wirebot',
     name: 'openWA',
-    icon: 'file:openwa.svg',
+    icon: 'file:wirebot.svg',
     group: ['transform'],
     version: 1,
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-    description: 'Send WhatsApp messages via OpenWA',
+    description: 'Send WhatsApp messages via Wirebot',
     defaults: {
-      name: 'OpenWA',
+      name: 'Wirebot',
     },
     inputs: ['main'],
     outputs: ['main'],
@@ -1333,20 +1333,20 @@ export class OpenWA implements INodeType {
 ### Trigger Node
 
 ```typescript
-// nodes/OpenWA/OpenWATrigger.node.ts
+// nodes/Wirebot/WirebotTrigger.node.ts
 
 import { IHookFunctions, IWebhookFunctions, INodeType, INodeTypeDescription, IWebhookResponseData } from 'n8n-workflow';
 
-export class OpenWATrigger implements INodeType {
+export class WirebotTrigger implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'OpenWA Trigger',
+    displayName: 'Wirebot Trigger',
     name: 'openWATrigger',
-    icon: 'file:openwa.svg',
+    icon: 'file:wirebot.svg',
     group: ['trigger'],
     version: 1,
-    description: 'Starts workflow on OpenWA events',
+    description: 'Starts workflow on Wirebot events',
     defaults: {
-      name: 'OpenWA Trigger',
+      name: 'Wirebot Trigger',
     },
     inputs: [],
     outputs: ['main'],
@@ -1391,7 +1391,7 @@ export class OpenWATrigger implements INodeType {
   webhookMethods = {
     default: {
       async checkExists(this: IHookFunctions): Promise<boolean> {
-        // Check if webhook already exists in OpenWA
+        // Check if webhook already exists in Wirebot
         const webhookUrl = this.getNodeWebhookUrl('default');
         const credentials = await this.getCredentials('openWAApi');
 

@@ -111,7 +111,7 @@ export class WebhookService {
       idempotencyKey: generateIdempotencyKey('test', { webhookId: webhook.id }),
       deliveryId: generateDeliveryId(),
       data: {
-        message: 'This is a test webhook from OpenWA',
+        message: 'This is a test webhook from Wirebot',
         webhookId: webhook.id,
         url: webhook.url,
       },
@@ -120,16 +120,16 @@ export class WebhookService {
     const body = JSON.stringify(testPayload);
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'User-Agent': 'OpenWA-Webhook/1.0.0',
-      'X-OpenWA-Event': 'test',
-      'X-OpenWA-Idempotency-Key': testPayload.idempotencyKey,
-      'X-OpenWA-Delivery-Id': testPayload.deliveryId,
-      'X-OpenWA-Retry-Count': '0',
+      'User-Agent': 'Wirebot-Webhook/1.0.0',
+      'X-Wirebot-Event': 'test',
+      'X-Wirebot-Idempotency-Key': testPayload.idempotencyKey,
+      'X-Wirebot-Delivery-Id': testPayload.deliveryId,
+      'X-Wirebot-Retry-Count': '0',
       ...webhook.headers,
     };
 
     if (webhook.secret) {
-      headers['X-OpenWA-Signature'] = this.generateSignature(body, webhook.secret);
+      headers['X-Wirebot-Signature'] = this.generateSignature(body, webhook.secret);
     }
 
     try {
@@ -197,11 +197,11 @@ export class WebhookService {
       // Build headers
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'User-Agent': 'OpenWA-Webhook/1.0.0',
-        'X-OpenWA-Event': event,
-        'X-OpenWA-Idempotency-Key': idempotencyKey,
-        'X-OpenWA-Delivery-Id': deliveryId,
-        'X-OpenWA-Retry-Count': '0',
+        'User-Agent': 'Wirebot-Webhook/1.0.0',
+        'X-Wirebot-Event': event,
+        'X-Wirebot-Idempotency-Key': idempotencyKey,
+        'X-Wirebot-Delivery-Id': deliveryId,
+        'X-Wirebot-Retry-Count': '0',
         ...webhook.headers,
       };
 
@@ -210,7 +210,7 @@ export class WebhookService {
         const signature = webhook.secret ? this.generateSignature(JSON.stringify(finalPayload), webhook.secret) : '';
 
         if (webhook.secret) {
-          headers['X-OpenWA-Signature'] = signature;
+          headers['X-Wirebot-Signature'] = signature;
         }
 
         const jobData: WebhookJobData = {
@@ -307,11 +307,11 @@ export class WebhookService {
     const body = JSON.stringify(payload);
 
     // Update retry count header
-    headers['X-OpenWA-Retry-Count'] = String(attempt - 1);
+    headers['X-Wirebot-Retry-Count'] = String(attempt - 1);
 
     // Add signature if secret is configured and not already present
-    if (webhook.secret && !headers['X-OpenWA-Signature']) {
-      headers['X-OpenWA-Signature'] = this.generateSignature(body, webhook.secret);
+    if (webhook.secret && !headers['X-Wirebot-Signature']) {
+      headers['X-Wirebot-Signature'] = this.generateSignature(body, webhook.secret);
     }
 
     try {

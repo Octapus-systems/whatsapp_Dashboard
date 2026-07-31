@@ -19,7 +19,7 @@ export class OpenwaStack extends cdk.Stack {
 
     const sg = new ec2.SecurityGroup(this, 'OpenwaSg', {
       vpc,
-      description: 'OpenWA host - HTTP/HTTPS public, SSH restricted',
+      description: 'Wirebot host - HTTP/HTTPS public, SSH restricted',
       allowAllOutbound: true,
     });
     sg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), 'HTTP');
@@ -56,9 +56,9 @@ export class OpenwaStack extends cdk.Stack {
       'chmod +x /usr/libexec/docker/cli-plugins/docker-buildx /usr/libexec/docker/cli-plugins/docker-compose',
       'ln -sf /usr/libexec/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose',
 
-      'mkdir -p /opt/openwa',
-      `git clone ${props.repoUrl} /opt/openwa/app || (cd /opt/openwa/app && git pull)`,
-      'cd /opt/openwa/app',
+      'mkdir -p /opt/wirebot',
+      `git clone ${props.repoUrl} /opt/wirebot/app || (cd /opt/wirebot/app && git pull)`,
+      'cd /opt/wirebot/app',
       'cp .env.minimal .env',
 
       // The committed compose file binds every port to 127.0.0.1, which is right

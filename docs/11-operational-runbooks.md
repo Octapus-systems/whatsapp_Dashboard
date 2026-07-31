@@ -2,7 +2,7 @@
 
 ## 11.1 Overview
 
-This document contains Standard Operating Procedures (SOP) for OpenWA operations, including incident response, maintenance procedures, and troubleshooting guides.
+This document contains Standard Operating Procedures (SOP) for Wirebot operations, including incident response, maintenance procedures, and troubleshooting guides.
 
 ### Runbook Structure
 
@@ -38,7 +38,7 @@ Each runbook follows this format:
 docker compose ps
 
 # 2. Check container logs
-docker compose logs --tail=100 openwa
+docker compose logs --tail=100 wirebot
 
 # 3. Check system resources
 docker stats --no-stream
@@ -47,18 +47,18 @@ free -m
 
 # 4. Identify root cause
 # A. Container crashed
-docker compose logs openwa 2>&1 | grep -i "error\|fatal\|crash"
+docker compose logs wirebot 2>&1 | grep -i "error\|fatal\|crash"
 
 # B. Out of memory
-docker compose logs openwa 2>&1 | grep -i "oom\|memory"
+docker compose logs wirebot 2>&1 | grep -i "oom\|memory"
 
 # C. Database connection
-docker compose logs openwa 2>&1 | grep -i "database\|connection refused"
+docker compose logs wirebot 2>&1 | grep -i "database\|connection refused"
 
 # 5. Apply fix based on cause:
 
 # A. Simple restart
-docker compose restart openwa
+docker compose restart wirebot
 
 # B. Full restart with cleanup
 docker compose down
@@ -72,7 +72,7 @@ docker compose up -d
 docker compose restart postgres
 # Wait for postgres to be ready
 sleep 10
-docker compose restart openwa
+docker compose restart wirebot
 ```
 
 **Verification:**
@@ -114,7 +114,7 @@ curl -H "X-API-Key: $API_KEY" \
   http://localhost:2785/api/sessions/{sessionId}
 
 # 2. Check if auto-reconnect is working
-docker compose logs openwa 2>&1 | grep -i "{sessionId}" | tail -20
+docker compose logs wirebot 2>&1 | grep -i "{sessionId}" | tail -20
 
 # 3. Try session restart
 curl -X POST -H "X-API-Key: $API_KEY" \
@@ -172,7 +172,7 @@ curl -X POST http://localhost:2785/api/sessions/{sessionId}/messages \
 
 ```bash
 # 1. Check current memory usage
-docker stats --no-stream openwa
+docker stats --no-stream wirebot
 free -m
 
 # 2. Identify memory consumers
@@ -181,7 +181,7 @@ curl -H "X-API-Key: $API_KEY" \
   http://localhost:2785/api/metrics/memory
 
 # 3. Check for memory leaks
-docker compose logs openwa 2>&1 | grep -i "heap\|memory\|gc"
+docker compose logs wirebot 2>&1 | grep -i "heap\|memory\|gc"
 
 # 4. Immediate actions:
 
@@ -190,7 +190,7 @@ curl -X POST -H "X-API-Key: $API_KEY" \
   http://localhost:2785/api/cache/clear
 
 # B. Restart container (will reconnect sessions)
-docker compose restart openwa
+docker compose restart wirebot
 
 # C. If caused by too many sessions:
 # List sessions sorted by memory
@@ -208,7 +208,7 @@ curl -H "X-API-Key: $API_KEY" \
 
 ```bash
 # Memory below threshold
-docker stats --no-stream openwa
+docker stats --no-stream wirebot
 # Expected: Memory usage < 80%
 
 # All sessions still connected
@@ -241,17 +241,17 @@ curl -H "X-API-Key: $API_KEY" \
 
 # 3. Identify failure reason:
 # A. Endpoint not responding
-curl -v https://your-webhook-endpoint.com/openwa
+curl -v https://your-webhook-endpoint.com/wirebot
 
 # B. SSL certificate issues
-curl -v --insecure https://your-webhook-endpoint.com/openwa
+curl -v --insecure https://your-webhook-endpoint.com/wirebot
 
 # C. Timeout
-curl -v --max-time 30 https://your-webhook-endpoint.com/openwa
+curl -v --max-time 30 https://your-webhook-endpoint.com/wirebot
 
 # D. Authentication failed
 curl -v -H "Authorization: Bearer token" \
-  https://your-webhook-endpoint.com/openwa
+  https://your-webhook-endpoint.com/wirebot
 
 # 4. Test webhook delivery
 curl -X POST -H "X-API-Key: $API_KEY" \
@@ -327,7 +327,7 @@ docker stats --no-stream
 ./scripts/backup.sh
 
 # Verify backup
-ls -la /backups/openwa/$(date +%Y%m%d)/
+ls -la /backups/wirebot/$(date +%Y%m%d)/
 
 # 4. Stop accepting new requests (if using load balancer)
 # Remove from load balancer or set to maintenance mode
@@ -397,24 +397,24 @@ curl -H "X-API-Key: $API_KEY" \
 
 # 2. Create backup
 ./scripts/backup.sh
-BACKUP_DIR="/backups/openwa/$(date +%Y%m%d-%H%M%S)"
+BACKUP_DIR="/backups/wirebot/$(date +%Y%m%d-%H%M%S)"
 
 # 3. Export current state
-docker compose exec openwa npm run export -- --output /tmp/export.json
-docker cp openwa:/tmp/export.json $BACKUP_DIR/
+docker compose exec wirebot npm run export -- --output /tmp/export.json
+docker cp wirebot:/tmp/export.json $BACKUP_DIR/
 
 # 4. Stop services
 docker compose down
 
 # 5. Update version in docker-compose.yml
-# Change: image: ghcr.io/rmyndharis/openwa:0.1.0
-# To:     image: ghcr.io/rmyndharis/openwa:0.2.0
+# Change: image: ghcr.io/rmyndharis/wirebot:0.1.0
+# To:     image: ghcr.io/rmyndharis/wirebot:0.2.0
 
 # 6. Pull new image
 docker compose pull
 
 # 7. Run database migrations (if any)
-docker compose run --rm openwa npm run migration:run
+docker compose run --rm wirebot npm run migration:run
 
 # 8. Start services
 docker compose up -d
@@ -457,7 +457,7 @@ docker compose down
 # 2. Revert docker-compose.yml to previous version
 
 # 3. Restore database
-cp $BACKUP_DIR/openwa.db ./data/
+cp $BACKUP_DIR/wirebot.db ./data/
 
 # 4. Start with old version
 docker compose up -d
@@ -488,7 +488,7 @@ curl -H "X-API-Key: $API_KEY" \
 set -e
 
 DATE=$(date +%Y%m%d-%H%M%S)
-BACKUP_DIR="/backups/openwa/$DATE"
+BACKUP_DIR="/backups/wirebot/$DATE"
 RETENTION_DAYS=30
 
 echo "Starting backup to $BACKUP_DIR"
@@ -499,12 +499,12 @@ mkdir -p "$BACKUP_DIR"
 # 1. Backup database
 if [ "$DATABASE_ADAPTER" = "postgresql" ]; then
     echo "Backing up PostgreSQL..."
-    docker compose exec -T postgres pg_dump -U postgres openwa > "$BACKUP_DIR/database.sql"
+    docker compose exec -T postgres pg_dump -U postgres wirebot > "$BACKUP_DIR/database.sql"
 else
     echo "Backing up SQLite..."
     # Use SQLite online backup
-    docker compose exec openwa sqlite3 /app/data/openwa.db ".backup /tmp/backup.db"
-    docker cp openwa:/tmp/backup.db "$BACKUP_DIR/openwa.db"
+    docker compose exec wirebot sqlite3 /app/data/wirebot.db ".backup /tmp/backup.db"
+    docker cp wirebot:/tmp/backup.db "$BACKUP_DIR/wirebot.db"
 fi
 
 # 2. Backup auth sessions
@@ -524,12 +524,12 @@ fi
 
 # 5. Create archive
 echo "Creating archive..."
-tar -czf "$BACKUP_DIR.tar.gz" -C "/backups/openwa" "$DATE"
+tar -czf "$BACKUP_DIR.tar.gz" -C "/backups/wirebot" "$DATE"
 rm -rf "$BACKUP_DIR"
 
 # 6. Cleanup old backups
 echo "Cleaning up old backups..."
-find /backups/openwa -name "*.tar.gz" -mtime +$RETENTION_DAYS -delete
+find /backups/wirebot -name "*.tar.gz" -mtime +$RETENTION_DAYS -delete
 
 # 7. Verify backup
 echo "Verifying backup..."
@@ -604,10 +604,10 @@ if [ -f "$RESTORE_DIR/*/database.sql" ]; then
     echo "Restoring PostgreSQL..."
     docker compose up -d postgres
     sleep 10
-    docker compose exec -T postgres psql -U postgres openwa < "$RESTORE_DIR"/*/database.sql
-elif [ -f "$RESTORE_DIR/*/openwa.db" ]; then
+    docker compose exec -T postgres psql -U postgres wirebot < "$RESTORE_DIR"/*/database.sql
+elif [ -f "$RESTORE_DIR/*/wirebot.db" ]; then
     echo "Restoring SQLite..."
-    cp "$RESTORE_DIR"/*/openwa.db ./data/
+    cp "$RESTORE_DIR"/*/wirebot.db ./data/
 fi
 
 # 4. Restore auth sessions
@@ -729,7 +729,7 @@ find /backups -name "*.tar.gz" -mtime +30 -delete
 find ./data/media -mtime +30 -delete
 
 # E. Truncate large log files
-truncate -s 0 ./logs/openwa.log
+truncate -s 0 ./logs/wirebot.log
 
 # 4. Verify
 df -h

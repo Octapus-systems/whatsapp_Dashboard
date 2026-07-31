@@ -1,7 +1,7 @@
 {
-  "name": "openwa-auto-responder",
+  "name": "wirebot-auto-responder",
   "version": "1.0.0",
-  "description": "Auto-responder bot for OpenWA WhatsApp Gateway",
+  "description": "Auto-responder bot for Wirebot WhatsApp Gateway",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"

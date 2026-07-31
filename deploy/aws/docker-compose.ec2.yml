@@ -1,32 +1,32 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: openwa-postgres
+    container_name: wirebot-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: openwa
+      POSTGRES_USER: wirebot
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U openwa -d ${DATABASE_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U wirebot -d ${DATABASE_NAME}"]
       interval: 5s
       timeout: 3s
       retries: 20
 
-  openwa-api:
+  wirebot-api:
     build:
       context: ../..
       dockerfile: Dockerfile
-    container_name: openwa-api
+    container_name: wirebot-api
     restart: unless-stopped
     env_file:
       - .env
     ports:
       - "80:2785"
     volumes:
-      - openwa-data:/app/data
+      - wirebot-data:/app/data
     shm_size: "1gb"
     depends_on:
       postgres:
@@ -45,5 +45,5 @@ services:
       start_period: 60s
 
 volumes:
-  openwa-data:
+  wirebot-data:
   postgres-data:

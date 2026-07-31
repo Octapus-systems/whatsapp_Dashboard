@@ -12,7 +12,7 @@ flowchart TB
         C3[n8n/Automation]
     end
     
-    subgraph OpenWA["OpenWA Platform"]
+    subgraph Wirebot["Wirebot Platform"]
         subgraph API["API Layer"]
             REST[REST API<br/>NestJS]
             WS[WebSocket<br/>Real-time]
@@ -76,7 +76,7 @@ sequenceDiagram
 
 ## 3.2 Pluggable Architecture Philosophy
 
-OpenWA is designed with a **Pluggable Architecture** that allows infrastructure components to be swapped without changing application code. This enables flexible deployments ranging from minimal single-session bots to enterprise-scale multi-tenant platforms.
+Wirebot is designed with a **Pluggable Architecture** that allows infrastructure components to be swapped without changing application code. This enables flexible deployments ranging from minimal single-session bots to enterprise-scale multi-tenant platforms.
 
 ### Design Philosophy
 
@@ -215,7 +215,7 @@ export interface IAdapterLifecycle {
 
 ### Dependency Injection Configuration
 
-OpenWA uses NestJS Dynamic Modules for adapter injection:
+Wirebot uses NestJS Dynamic Modules for adapter injection:
 
 ```typescript
 // adapters/adapters.module.ts
@@ -1236,13 +1236,13 @@ flowchart TB
 
 ## 3.13 Pluggable Adapters
 
-OpenWA uses the adapter pattern for infrastructure components that can be swapped per deployment needs. This allows users with limited resources to run OpenWA without heavyweight external dependencies.
+Wirebot uses the adapter pattern for infrastructure components that can be swapped per deployment needs. This allows users with limited resources to run Wirebot without heavyweight external dependencies.
 
 ### Adapter Overview
 
 ```mermaid
 flowchart TB
-    subgraph Core["OpenWA Core"]
+    subgraph Core["Wirebot Core"]
         APP[Application Logic]
     end
 
@@ -1531,7 +1531,7 @@ export class StorageFactory {
 
 ### 3.13.2 Database Adapter
 
-OpenWA supports SQLite for lightweight deployments and PostgreSQL for high-volume production.
+Wirebot supports SQLite for lightweight deployments and PostgreSQL for high-volume production.
 
 #### Database Comparison
 
@@ -1566,7 +1566,7 @@ export const getDatabaseConfig = (config: ConfigService): TypeOrmModuleOptions =
     return {
       ...baseConfig,
       type: 'sqlite',
-      database: config.get('database.sqlite.path', './data/openwa.db'),
+      database: config.get('database.sqlite.path', './data/wirebot.db'),
       // SQLite specific optimizations
       extra: {
         // Enable WAL mode for better concurrent reads
@@ -1701,7 +1701,7 @@ export const getCacheConfig = async (
 
 ### 3.13.4 Deployment Profiles
 
-OpenWA provides several deployment profiles for different needs:
+Wirebot provides several deployment profiles for different needs:
 
 ```mermaid
 flowchart LR
@@ -1740,7 +1740,7 @@ flowchart LR
 ```bash
 # Database
 DATABASE_TYPE=sqlite
-DATABASE_SQLITE_PATH=./data/openwa.db
+DATABASE_SQLITE_PATH=./data/wirebot.db
 
 # Storage
 STORAGE_TYPE=local
@@ -1761,7 +1761,7 @@ MAX_SESSIONS=3
 ```bash
 # Database
 DATABASE_TYPE=postgres
-DATABASE_URL=postgresql://openwa:password@localhost:5432/openwa
+DATABASE_URL=postgresql://wirebot:password@localhost:5432/wirebot
 
 # Storage
 STORAGE_TYPE=local
@@ -1780,12 +1780,12 @@ MAX_SESSIONS=10
 ```bash
 # Database
 DATABASE_TYPE=postgres
-DATABASE_URL=postgresql://openwa:password@db-cluster:5432/openwa
+DATABASE_URL=postgresql://wirebot:password@db-cluster:5432/wirebot
 DATABASE_POOL_MAX=50
 
 # Storage
 STORAGE_TYPE=s3
-STORAGE_S3_BUCKET=openwa-media
+STORAGE_S3_BUCKET=wirebot-media
 STORAGE_S3_REGION=ap-southeast-1
 STORAGE_S3_ACCESS_KEY_ID=xxx
 STORAGE_S3_SECRET_ACCESS_KEY=xxx

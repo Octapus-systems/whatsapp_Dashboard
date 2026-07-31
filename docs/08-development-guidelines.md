@@ -3,7 +3,7 @@
 ## 8.1 Project Structure
 
 ```
-openwa/
+wirebot/
 ├── src/
 │   ├── main.ts                    # Application entry
 │   ├── app.module.ts              # Root module
@@ -727,8 +727,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/rmyndharis/OpenWA.git
-cd openwa
+git clone https://github.com/rmyndharis/Wirebot.git
+cd wirebot
 
 # 2. Install dependencies
 npm install
@@ -783,7 +783,7 @@ npm run start:dev
 
 ### Environment Variables
 
-OpenWA supports multiple infrastructure configurations. Choose based on your needs:
+Wirebot supports multiple infrastructure configurations. Choose based on your needs:
 
 #### Minimal Profile (Development / Single Session)
 
@@ -797,7 +797,7 @@ LOG_LEVEL=debug
 
 # Database: SQLite (zero config)
 DATABASE_TYPE=sqlite
-DATABASE_SQLITE_PATH=./data/openwa.db
+DATABASE_SQLITE_PATH=./data/wirebot.db
 
 # Storage: Local filesystem
 STORAGE_TYPE=local
@@ -834,7 +834,7 @@ LOG_LEVEL=info
 
 # Database: PostgreSQL
 DATABASE_TYPE=postgres
-DATABASE_URL=postgresql://openwa:openwa@localhost:5432/openwa
+DATABASE_URL=postgresql://wirebot:wirebot@localhost:5432/wirebot
 
 # Storage: Local filesystem
 STORAGE_TYPE=local
@@ -1247,7 +1247,7 @@ docker compose logs app --tail 100
 **Solution:**
 ```dockerfile
 # Add shared memory size
-docker run --shm-size=2gb openwa
+docker run --shm-size=2gb wirebot
 ```
 
 Or in docker-compose.yml:

@@ -404,12 +404,12 @@ const corsOptions = {
 
 ```mermaid
 sequenceDiagram
-    participant OW as OpenWA
+    participant OW as Wirebot
     participant WH as Webhook Endpoint
     
     OW->>OW: Create payload
     OW->>OW: Sign with HMAC-SHA256
-    OW->>WH: POST + X-OpenWA-Signature
+    OW->>WH: POST + X-Wirebot-Signature
     WH->>WH: Verify signature
     WH->>WH: Process if valid
     WH-->>OW: 200 OK
@@ -418,7 +418,7 @@ sequenceDiagram
 ### Signature Verification
 
 ```typescript
-// OpenWA: Generate signature
+// Wirebot: Generate signature
 function signPayload(payload: object, secret: string): string {
   const hmac = crypto.createHmac('sha256', secret);
   hmac.update(JSON.stringify(payload));
@@ -587,7 +587,7 @@ version: '3.8'
 
 services:
   app:
-    image: openwa:latest
+    image: wirebot:latest
     secrets:
       - db_password
       - encryption_key
@@ -842,7 +842,7 @@ contacts:
     
   security_lead:
     name: "Security Lead"
-    email: "security@openwa.dev"
+    email: "security@wirebot.dev"
     
   escalation:
     - level: 1
@@ -854,7 +854,7 @@ contacts:
 
 communication:
   internal_channel: "#incident-response"
-  status_page: "https://status.openwa.dev"
+  status_page: "https://status.wirebot.dev"
 ```
 
 ### Runbooks

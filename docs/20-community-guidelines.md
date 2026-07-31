@@ -4,7 +4,7 @@
 
 ### Our Pledge
 
-OpenWA is committed to providing a welcoming and inclusive environment for everyone. We pledge to make participation in our project and community a harassment-free experience for all, regardless of:
+Wirebot is committed to providing a welcoming and inclusive environment for everyone. We pledge to make participation in our project and community a harassment-free experience for all, regardless of:
 
 - Age, body size, disability, ethnicity, sex characteristics
 - Gender identity and expression
@@ -57,11 +57,11 @@ flowchart LR
 # 1. Fork the repository on GitHub
 
 # 2. Clone your fork
-git clone https://github.com/YOUR_USERNAME/openwa.git
-cd openwa
+git clone https://github.com/YOUR_USERNAME/wirebot.git
+cd wirebot
 
 # 3. Add upstream remote
-git remote add upstream https://github.com/rmyndharis/OpenWA.git
+git remote add upstream https://github.com/rmyndharis/Wirebot.git
 
 # 4. Install dependencies
 npm install
@@ -218,7 +218,7 @@ Use the bug report template:
 Clear and concise description of the bug
 
 ## Environment
-- OpenWA Version:
+- Wirebot Version:
 - Node.js Version:
 - OS:
 - Docker Version (if applicable):
@@ -291,9 +291,9 @@ Primary community forum for:
 
 Categories:
 - **Announcements**: Official announcements from maintainers
-- **Q&A**: Questions about using OpenWA
+- **Q&A**: Questions about using Wirebot
 - **Ideas**: Feature suggestions and brainstorming
-- **Show and Tell**: Share your projects using OpenWA
+- **Show and Tell**: Share your projects using Wirebot
 - **General**: General discussion
 
 ### Discord Server (Optional)
@@ -305,10 +305,10 @@ Real-time chat for:
 
 Channels:
 - `#general` - General discussion
-- `#support` - Help with OpenWA
+- `#support` - Help with Wirebot
 - `#development` - Development discussions
 - `#showcase` - Share your projects
-- `#off-topic` - Non-OpenWA discussions
+- `#off-topic` - Non-Wirebot discussions
 
 ### Support Priority
 
@@ -416,7 +416,7 @@ We value all contributions:
 ```markdown
 ## Contributors
 
-Thanks to all the people who have contributed to OpenWA!
+Thanks to all the people who have contributed to Wirebot!
 
 <!-- ALL-CONTRIBUTORS-LIST:START -->
 <!-- ALL-CONTRIBUTORS-LIST:END -->
@@ -431,7 +431,7 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 **DO NOT** report security vulnerabilities through public GitHub issues.
 
 Instead:
-1. Email: security@openwa.dev
+1. Email: security@wirebot.dev
 2. Use GitHub Security Advisories (private)
 
 Include:

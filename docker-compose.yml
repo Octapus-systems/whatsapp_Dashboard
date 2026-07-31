@@ -1,11 +1,11 @@
-# OpenWA - Docker Compose Configuration
+# Wirebot - Docker Compose Configuration
 # Smart Orchestration with Profiles
 
 services:
   # ===== CORE: Traefik Reverse Proxy =====
   traefik:
     image: traefik:v3.0
-    container_name: openwa-traefik
+    container_name: wirebot-traefik
     profiles: ['with-proxy', 'full']
     restart: unless-stopped
     ports:
@@ -15,15 +15,15 @@ services:
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
     labels:
-      - 'com.openwa.service=proxy'
-      - 'com.openwa.core=true'
+      - 'com.wirebot.service=proxy'
+      - 'com.wirebot.core=true'
 
-  # ===== CORE: OpenWA Backend API =====
-  openwa-api:
+  # ===== CORE: Wirebot Backend API =====
+  wirebot-api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: openwa-api
+    container_name: wirebot-api
     restart: unless-stopped
     ports:
       - '127.0.0.1:${API_PORT:-2785}:2785'
@@ -36,11 +36,11 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       # Database
       - DATABASE_TYPE=${DATABASE_TYPE:-sqlite}
-      - DATABASE_NAME=${DATABASE_NAME:-/app/data/openwa.sqlite}
+      - DATABASE_NAME=${DATABASE_NAME:-/app/data/wirebot.sqlite}
       - DATABASE_HOST=${DATABASE_HOST:-postgres}
       - DATABASE_PORT=${DATABASE_PORT:-5432}
-      - DATABASE_USERNAME=${DATABASE_USERNAME:-openwa}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-openwa}
+      - DATABASE_USERNAME=${DATABASE_USERNAME:-wirebot}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-wirebot}
       - DATABASE_SYNCHRONIZE=${DATABASE_SYNCHRONIZE:-false}
       # Engine
       - ENGINE_TYPE=${ENGINE_TYPE:-whatsapp-web.js}
@@ -54,7 +54,7 @@ services:
       - S3_ENDPOINT=${S3_ENDPOINT:-http://minio:9000}
       - S3_ACCESS_KEY=${S3_ACCESS_KEY:-minioadmin}
       - S3_SECRET_KEY=${S3_SECRET_KEY:-minioadmin}
-      - S3_BUCKET=${S3_BUCKET:-openwa}
+      - S3_BUCKET=${S3_BUCKET:-wirebot}
       # Redis
       - REDIS_ENABLED=${REDIS_ENABLED:-false}
       - REDIS_HOST=${REDIS_HOST:-redis}
@@ -72,7 +72,7 @@ services:
       # Security
       - API_MASTER_KEY=${API_MASTER_KEY:-}
     volumes:
-      - openwa-data:/app/data
+      - wirebot-data:/app/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./docker-compose.yml:/app/docker-compose.yml:ro
     depends_on:
@@ -95,50 +95,50 @@ services:
       retries: 3
       start_period: 30s
     labels:
-      - 'com.openwa.service=api'
-      - 'com.openwa.core=true'
+      - 'com.wirebot.service=api'
+      - 'com.wirebot.core=true'
 
   # ===== CORE: Dashboard Frontend =====
   dashboard:
     build:
       context: ./dashboard
       dockerfile: Dockerfile.traefik
-    container_name: openwa-dashboard
+    container_name: wirebot-dashboard
     profiles: ['with-dashboard', 'full']
     restart: unless-stopped
     expose:
       - '80'
     depends_on:
-      - openwa-api
+      - wirebot-api
     labels:
-      - 'com.openwa.service=dashboard'
-      - 'com.openwa.core=true'
+      - 'com.wirebot.service=dashboard'
+      - 'com.wirebot.core=true'
 
   # ===== OPTIONAL: Built-in PostgreSQL =====
   postgres:
     image: postgres:16-alpine
-    container_name: openwa-postgres
+    container_name: wirebot-postgres
     profiles: ['postgres']
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DATABASE_USERNAME:-openwa}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-openwa}
-      POSTGRES_DB: ${DATABASE_NAME:-openwa}
+      POSTGRES_USER: ${DATABASE_USERNAME:-wirebot}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-wirebot}
+      POSTGRES_DB: ${DATABASE_NAME:-wirebot}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USERNAME:-openwa}']
+      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USERNAME:-wirebot}']
       interval: 5s
       timeout: 3s
       retries: 5
     labels:
-      - 'com.openwa.service=database'
-      - 'com.openwa.builtin=true'
+      - 'com.wirebot.service=database'
+      - 'com.wirebot.builtin=true'
 
   # ===== OPTIONAL: Built-in Redis =====
   redis:
     image: redis:7-alpine
-    container_name: openwa-redis
+    container_name: wirebot-redis
     profiles: ['redis']
     restart: unless-stopped
     command: redis-server --appendonly yes
@@ -150,13 +150,13 @@ services:
       timeout: 3s
       retries: 5
     labels:
-      - 'com.openwa.service=cache'
-      - 'com.openwa.builtin=true'
+      - 'com.wirebot.service=cache'
+      - 'com.wirebot.builtin=true'
 
   # ===== OPTIONAL: Built-in MinIO (S3-compatible) =====
   minio:
     image: minio/minio
-    container_name: openwa-minio
+    container_name: wirebot-minio
     profiles: ['minio']
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -174,11 +174,11 @@ services:
       timeout: 5s
       retries: 3
     labels:
-      - 'com.openwa.service=storage'
-      - 'com.openwa.builtin=true'
+      - 'com.wirebot.service=storage'
+      - 'com.wirebot.builtin=true'
 
 volumes:
-  openwa-data:
+  wirebot-data:
     driver: local
   postgres-data:
     driver: local
@@ -189,4 +189,4 @@ volumes:
 
 networks:
   default:
-    name: openwa-network
+    name: wirebot-network

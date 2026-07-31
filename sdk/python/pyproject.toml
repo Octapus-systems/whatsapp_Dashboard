@@ -3,16 +3,16 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "openwa-sdk"
+name = "wirebot-sdk"
 version = "0.0.1"
-description = "Official Python SDK for OpenWA WhatsApp API Gateway"
+description = "Official Python SDK for Wirebot WhatsApp API Gateway"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.9"
 authors = [
-    { name = "OpenWA Contributors" }
+    { name = "Wirebot Contributors" }
 ]
-keywords = ["whatsapp", "api", "sdk", "openwa", "gateway"]
+keywords = ["whatsapp", "api", "sdk", "wirebot", "gateway"]
 
 dependencies = [
     "httpx>=0.25.0",

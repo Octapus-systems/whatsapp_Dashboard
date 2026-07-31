@@ -11,11 +11,11 @@ Use one Ubuntu EC2 instance with Docker and local PostgreSQL. Recommended minimu
 curl -fsSL https://raw.githubusercontent.com/Octapus-systems/whatsapp_Dashboard/QrCodeandconnecting/deploy/aws/deploy-ec2.sh | bash
 ```
 
-5. Edit `/opt/openwa/deploy/aws/.env` and set `DATABASE_PASSWORD` plus a strong `API_MASTER_KEY`.
+5. Edit `/opt/wirebot/deploy/aws/.env` and set `DATABASE_PASSWORD` plus a strong `API_MASTER_KEY`.
 6. Rerun:
 
 ```bash
-/opt/openwa/deploy/aws/deploy-ec2.sh
+/opt/wirebot/deploy/aws/deploy-ec2.sh
 ```
 
 Your URL will be:

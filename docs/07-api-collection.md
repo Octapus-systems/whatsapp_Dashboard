@@ -2,7 +2,7 @@
 
 ## 07.1 Overview
 
-This document provides a complete collection of OpenWA API endpoints with request/response examples for each endpoint. It can be used as a quick reference or imported into tools such as Postman, Insomnia, or Bruno.
+This document provides a complete collection of Wirebot API endpoints with request/response examples for each endpoint. It can be used as a quick reference or imported into tools such as Postman, Insomnia, or Bruno.
 
 ### Base URL
 
@@ -109,20 +109,20 @@ curl -H "X-API-Key: $API_KEY" \
 
 **Response:**
 ```
-# HELP openwa_sessions_total Total number of sessions
-# TYPE openwa_sessions_total gauge
-openwa_sessions_total{status="connected"} 4
-openwa_sessions_total{status="disconnected"} 1
+# HELP wirebot_sessions_total Total number of sessions
+# TYPE wirebot_sessions_total gauge
+wirebot_sessions_total{status="connected"} 4
+wirebot_sessions_total{status="disconnected"} 1
 
-# HELP openwa_messages_total Total messages processed
-# TYPE openwa_messages_total counter
-openwa_messages_total{direction="incoming"} 15234
-openwa_messages_total{direction="outgoing"} 8567
+# HELP wirebot_messages_total Total messages processed
+# TYPE wirebot_messages_total counter
+wirebot_messages_total{direction="incoming"} 15234
+wirebot_messages_total{direction="outgoing"} 8567
 
-# HELP openwa_api_requests_total Total API requests
-# TYPE openwa_api_requests_total counter
-openwa_api_requests_total{method="GET",status="200"} 45678
-openwa_api_requests_total{method="POST",status="200"} 12345
+# HELP wirebot_api_requests_total Total API requests
+# TYPE wirebot_api_requests_total counter
+wirebot_api_requests_total{method="GET",status="200"} 45678
+wirebot_api_requests_total{method="POST",status="200"} 12345
 ```
 
 ## 07.3 Sessions API
@@ -446,7 +446,7 @@ curl -X POST http://localhost:2785/api/sessions/default/messages \
     { "id": "btn2", "text": "Option 2" },
     { "id": "btn3", "text": "Option 3" }
   ],
-  "footer": "Powered by OpenWA"
+  "footer": "Powered by Wirebot"
 }
 ```
 
@@ -466,7 +466,7 @@ curl -X POST http://localhost:2785/api/sessions/default/messages \
       ]
     }
   ],
-  "footer": "Powered by OpenWA"
+  "footer": "Powered by Wirebot"
 }
 ```
 
@@ -1128,8 +1128,8 @@ curl -X DELETE \
 ```json
 {
   "info": {
-    "name": "OpenWA API",
-    "description": "OpenWA WhatsApp API Gateway",
+    "name": "Wirebot API",
+    "description": "Wirebot WhatsApp API Gateway",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -1248,7 +1248,7 @@ curl -X DELETE \
             "url": "{{baseUrl}}/api/sessions/{{sessionId}}/messages",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"phone\": \"628123456789@c.us\",\n  \"type\": \"text\",\n  \"body\": \"Hello from OpenWA!\"\n}",
+              "raw": "{\n  \"phone\": \"628123456789@c.us\",\n  \"type\": \"text\",\n  \"body\": \"Hello from Wirebot!\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1294,13 +1294,13 @@ curl -X DELETE \
 }
 ```
 
-Download: [openwa-postman-collection.json](./assets/openwa-postman-collection.json)
+Download: [wirebot-postman-collection.json](./assets/wirebot-postman-collection.json)
 
 ## 07.10 cURL Examples Collection
 
 ```bash
 #!/bin/bash
-# openwa-curl-examples.sh
+# wirebot-curl-examples.sh
 
 BASE_URL="http://localhost:2785"
 API_KEY="your-api-key"

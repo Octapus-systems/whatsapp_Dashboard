@@ -1,4 +1,4 @@
-# render.yaml — OpenWA Render Deployment Config
+# render.yaml — Wirebot Render Deployment Config
 # This file provisions the backend API service and PostgreSQL database on Render.
 # Commit this file and connect your repo to Render to use it.
 
@@ -10,8 +10,8 @@ services:
     dockerContext: .
     plan: starter  # persistent disks require a paid Render web service
     disk:
-      name: openwa-data
-      mountPath: /var/openwa/data
+      name: wirebot-data
+      mountPath: /var/wirebot/data
       sizeGB: 1
     healthCheckPath: /api/health
     envVars:
@@ -33,7 +33,7 @@ services:
       - key: ENGINE_TYPE
         value: whatsapp-web.js
       - key: SESSION_DATA_PATH
-        value: /var/openwa/data/sessions
+        value: /var/wirebot/data/sessions
       - key: PUPPETEER_HEADLESS
         value: "true"
       - key: PUPPETEER_ARGS
@@ -46,23 +46,23 @@ services:
         value: postgres
       - key: DATABASE_HOST
         fromDatabase:
-          name: openwa-db
+          name: wirebot-db
           property: host
       - key: DATABASE_PORT
         fromDatabase:
-          name: openwa-db
+          name: wirebot-db
           property: port
       - key: DATABASE_NAME
         fromDatabase:
-          name: openwa-db
+          name: wirebot-db
           property: database
       - key: DATABASE_USERNAME
         fromDatabase:
-          name: openwa-db
+          name: wirebot-db
           property: user
       - key: DATABASE_PASSWORD
         fromDatabase:
-          name: openwa-db
+          name: wirebot-db
           property: password
       - key: DATABASE_SSL
         value: "true"
@@ -81,7 +81,7 @@ services:
       - key: STORAGE_TYPE
         value: local
       - key: STORAGE_LOCAL_PATH
-        value: /var/openwa/data/media
+        value: /var/wirebot/data/media
       - key: MINIO_BUILTIN
         value: "false"
 
@@ -103,7 +103,7 @@ services:
       - key: PLUGINS_ENABLED
         value: "true"
       - key: PLUGINS_DIR
-        value: /var/openwa/data/plugins
+        value: /var/wirebot/data/plugins
 
       # Dashboard
       - key: DASHBOARD_ENABLED
@@ -120,7 +120,7 @@ services:
         value: "true"
 
 databases:
-  - name: openwa-db
+  - name: wirebot-db
     plan: free
-    databaseName: openwa
-    user: openwa
+    databaseName: wirebot
+    user: wirebot

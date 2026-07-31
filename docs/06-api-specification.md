@@ -1114,7 +1114,7 @@ GET /health/detailed
 
 ### Webhook Idempotency
 
-OpenWA provides an idempotency mechanism to prevent duplicate processing on the client side.
+Wirebot provides an idempotency mechanism to prevent duplicate processing on the client side.
 
 #### Idempotency Headers & Fields
 
@@ -1122,9 +1122,9 @@ OpenWA provides an idempotency mechanism to prevent duplicate processing on the 
 |--------------|-------------|
 | `deliveryId` | Unique ID for each delivery attempt |
 | `idempotencyKey` | Unique key per event (same across retries) |
-| `X-OpenWA-Delivery-Id` | Header carrying the delivery ID |
-| `X-OpenWA-Idempotency-Key` | Header carrying the idempotency key |
-| `X-OpenWA-Retry-Count` | Retry attempt number (0 = first attempt) |
+| `X-Wirebot-Delivery-Id` | Header carrying the delivery ID |
+| `X-Wirebot-Idempotency-Key` | Header carrying the idempotency key |
+| `X-Wirebot-Retry-Count` | Retry attempt number (0 = first attempt) |
 
 #### Idempotency Key Format
 
@@ -1147,8 +1147,8 @@ const processedEvents = new Map<string, number>(); // key -> timestamp
 const IDEMPOTENCY_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 async function handleWebhook(req: Request, res: Response) {
-  const idempotencyKey = req.headers['x-openwa-idempotency-key'] as string;
-  const retryCount = parseInt(req.headers['x-openwa-retry-count'] as string) || 0;
+  const idempotencyKey = req.headers['x-wirebot-idempotency-key'] as string;
+  const retryCount = parseInt(req.headers['x-wirebot-retry-count'] as string) || 0;
 
   // Check if already processed
   if (processedEvents.has(idempotencyKey)) {
@@ -1205,7 +1205,7 @@ WHERE processed_at < NOW() - INTERVAL '24 hours';
 ```typescript
 // Production implementation with PostgreSQL
 async function handleWebhookWithDB(req: Request, res: Response) {
-  const idempotencyKey = req.headers['x-openwa-idempotency-key'] as string;
+  const idempotencyKey = req.headers['x-wirebot-idempotency-key'] as string;
 
   try {
     // Try to insert (will fail if duplicate)
@@ -1347,7 +1347,7 @@ function verifyWebhookSignature(payload, signature, secret) {
 
 // Usage in Express
 app.post('/webhook', (req, res) => {
-  const signature = req.headers['x-openwa-signature'];
+  const signature = req.headers['x-wirebot-signature'];
   
   if (!verifyWebhookSignature(req.body, signature, WEBHOOK_SECRET)) {
     return res.status(401).send('Invalid signature');
@@ -1376,7 +1376,7 @@ X-RateLimit-Reset: 1706868060
 
 ## 6.7 WebSocket Real-time API
 
-In addition to the REST API, OpenWA provides WebSocket for real-time updates.
+In addition to the REST API, Wirebot provides WebSocket for real-time updates.
 
 > [!IMPORTANT]
 > The WebSocket format below is **canonical**. Client/server implementations must follow this `WSRequest/WSResponse` structure.
@@ -1582,10 +1582,10 @@ http://localhost:2785/api/docs-json
 
 | Language | Package | Status |
 |----------|---------|--------|
-| JavaScript/TypeScript | `@openwa/sdk` | 🔜 Planned |
-| Python | `openwa-python` | 🔜 Planned |
-| PHP | `openwa/php-sdk` | 🔜 Planned |
-| Go | `openwa-go` | 🔜 Planned |
+| JavaScript/TypeScript | `@wirebot/sdk` | 🔜 Planned |
+| Python | `wirebot-python` | 🔜 Planned |
+| PHP | `wirebot/php-sdk` | 🔜 Planned |
+| Go | `wirebot-go` | 🔜 Planned |
 
 ### cURL Examples
 
@@ -1604,7 +1604,7 @@ curl -X POST http://localhost:2785/api/sessions/sess_abc123/messages/send-text \
   -H "X-Request-ID: req_1706868000001" \
   -d '{
     "chatId": "628123456789@c.us",
-    "text": "Hello from OpenWA!"
+    "text": "Hello from Wirebot!"
   }'
 
 # Send image
@@ -1654,7 +1654,7 @@ sendMessage('sess_abc123', '628123456789@c.us', 'Hello!')
 import time
 import requests
 
-class OpenWA:
+class Wirebot:
     def __init__(self, base_url, api_key):
         self.base_url = base_url
         self.headers = {
@@ -1684,7 +1684,7 @@ class OpenWA:
         return response.json()
 
 # Usage
-client = OpenWA('http://localhost:2785/api', 'your-api-key')
+client = Wirebot('http://localhost:2785/api', 'your-api-key')
 result = client.send_text('sess_abc123', '628123456789@c.us', 'Hello from Python!')
 print(f"Message ID: {result['data']['messageId']}")
 ```

@@ -1,8 +1,8 @@
 {
-  "name": "openwa",
+  "name": "wirebot",
   "version": "0.1.6",
   "description": "Open Source WhatsApp API Gateway - Free, Self-Hosted HTTP API for WhatsApp",
-  "author": "Yudhi Armyndharis & OpenWA Contributors",
+  "author": "Jishad & Wirebot Contributors",
   "private": true,
   "license": "MIT",
   "scripts": {
