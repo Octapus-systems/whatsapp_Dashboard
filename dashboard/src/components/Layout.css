@@ -95,7 +95,7 @@
   background: var(--primary);
   border-color: var(--primary);
   color: white;
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
 }
 
 .collapse-toggle svg {
@@ -147,7 +147,7 @@
 }
 
 .nav-item.active {
-  background: rgba(56, 189, 248, 0.1);
+  background: rgba(37, 211, 102, 0.1);
   color: var(--primary);
 }
 

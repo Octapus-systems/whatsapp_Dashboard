@@ -116,13 +116,13 @@ select {
 }
 
 select:hover {
-  border-color: var(--primary, #38bdf8);
+  border-color: var(--primary, #25d366);
 }
 
 select:focus {
   outline: none;
-  border-color: var(--primary, #38bdf8);
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+  border-color: var(--primary, #25d366);
+  box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
 }
 
 select:disabled {
@@ -219,9 +219,9 @@ select:disabled {
 
 .modal-body input:focus {
   outline: none;
-  border-color: var(--primary, #38bdf8);
+  border-color: var(--primary, #25d366);
   background: var(--bg-white, #fff);
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+  box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
 }
 
 .modal-footer {

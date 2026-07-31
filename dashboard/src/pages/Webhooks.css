@@ -83,7 +83,7 @@
 }
 
 .webhooks-table .table-row:not(.header):hover {
-  background: rgba(56, 189, 248, 0.05);
+  background: rgba(37, 211, 102, 0.05);
 }
 
 .webhooks-table .table-row:not(.header):nth-child(even) {
@@ -158,7 +158,7 @@
 .event-tag {
   font-size: 0.6875rem;
   padding: 0.25rem 0.5rem;
-  background: rgba(56, 189, 248, 0.1);
+  background: rgba(37, 211, 102, 0.1);
   color: var(--primary);
   border-radius: 4px;
   font-weight: 500;
@@ -200,7 +200,7 @@
 }
 
 .status-badge.active {
-  background: rgba(56, 189, 248, 0.1);
+  background: rgba(37, 211, 102, 0.1);
   color: var(--primary);
 }
 
@@ -272,7 +272,7 @@
 .event-item code {
   font-size: 0.8125rem;
   color: var(--primary);
-  background: rgba(56, 189, 248, 0.1);
+  background: rgba(37, 211, 102, 0.1);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   width: fit-content;
@@ -447,7 +447,7 @@
 }
 
 button.delivery-row:hover {
-  background: rgba(56, 189, 248, 0.05);
+  background: rgba(37, 211, 102, 0.05);
 }
 
 .delivery-row-header {
