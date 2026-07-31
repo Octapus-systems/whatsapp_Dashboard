@@ -157,7 +157,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/rmyndharis/wirebot:latest
+    image: ghcr.io/jishad/wirebot:latest
     deploy:
       replicas: 1
       resources:

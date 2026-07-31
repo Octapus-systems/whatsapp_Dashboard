@@ -407,8 +407,8 @@ docker cp wirebot:/tmp/export.json $BACKUP_DIR/
 docker compose down
 
 # 5. Update version in docker-compose.yml
-# Change: image: ghcr.io/rmyndharis/wirebot:0.1.0
-# To:     image: ghcr.io/rmyndharis/wirebot:0.2.0
+# Change: image: ghcr.io/jishad/wirebot:0.1.0
+# To:     image: ghcr.io/jishad/wirebot:0.2.0
 
 # 6. Pull new image
 docker compose pull

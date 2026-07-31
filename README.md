@@ -98,7 +98,7 @@ Built on a **pluggable architecture**, Wirebot lets you swap database engines (S
 
 ```bash
 # Clone and start
-git clone https://github.com/rmyndharis/Wirebot.git
+git clone https://github.com/jishad/Wirebot.git
 cd Wirebot
 docker compose -f docker-compose.dev.yml up -d
 
@@ -112,7 +112,7 @@ docker compose -f docker-compose.dev.yml up -d
 
 ```bash
 # Clone repository
-git clone https://github.com/rmyndharis/Wirebot.git
+git clone https://github.com/jishad/Wirebot.git
 cd Wirebot
 
 # Install dependencies (includes dashboard)
@@ -310,10 +310,10 @@ See [LICENSE](./LICENSE) for details.
 
 **Wirebot** – Free, Open Source WhatsApp API Gateway
 
-[📖 Documentation](./docs/README.md) · [🔌 API Docs](http://localhost:2785/api/docs) · [🐛 Report Bug](https://github.com/rmyndharis/Wirebot/issues) · [💡 Request Feature](https://github.com/rmyndharis/Wirebot/issues)
+[📖 Documentation](./docs/README.md) · [🔌 API Docs](http://localhost:2785/api/docs) · [🐛 Report Bug](https://github.com/jishad/Wirebot/issues) · [💡 Request Feature](https://github.com/jishad/Wirebot/issues)
 
 <br/>
 
-<sub>Made with ❤️ by <a href="https://github.com/rmyndharis">Jishad</a> and the Wirebot Community</sub>
+<sub>Made with ❤️ by <a href="https://github.com/jishad">Jishad</a> and the Wirebot Community</sub>
 
 </div>

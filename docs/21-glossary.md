@@ -86,7 +86,7 @@ Design pattern used to create adapter instances based on configuration. Example:
 Unique identifier for a WhatsApp group. Format: `120363123456789@g.us`.
 
 ### GHCR
-GitHub Container Registry - registry for storing Docker images. The Wirebot image is available at `ghcr.io/rmyndharis/wirebot`.
+GitHub Container Registry - registry for storing Docker images. The Wirebot image is available at `ghcr.io/jishad/wirebot`.
 
 ## H
 

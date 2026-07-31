@@ -219,7 +219,7 @@ flowchart TB
 
 ```
 v0.0.1 Release Package:
-├── Docker image (ghcr.io/rmyndharis/wirebot:0.0.1)
+├── Docker image (ghcr.io/jishad/wirebot:0.0.1)
 ├── docker-compose.yml
 ├── Basic API documentation (Swagger)
 ├── README with quick start
@@ -329,7 +329,7 @@ gantt
 
 ```
 v0.0.2 Release Package:
-├── Docker image (ghcr.io/rmyndharis/wirebot:0.0.2)
+├── Docker image (ghcr.io/jishad/wirebot:0.0.2)
 ├── docker-compose.yml (with PostgreSQL & Redis)
 ├── Web Dashboard
 ├── API authentication (API keys)
@@ -434,7 +434,7 @@ gantt
 
 ```
 v0.1.0 Release Package:
-├── Docker image (ghcr.io/rmyndharis/wirebot:0.1.0)
+├── Docker image (ghcr.io/jishad/wirebot:0.1.0)
 ├── docker-compose.yml (production ready)
 ├── Full-featured Web Dashboard
 ├── Complete API documentation (Swagger)

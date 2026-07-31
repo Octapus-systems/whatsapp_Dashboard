@@ -57,7 +57,7 @@ export class BroadcastJob {
   @Column({ name: 'scheduled_at', type: dateColumnType(), nullable: true, transformer: DateTransformer })
   scheduledAt: Date | null;
 
-  @Column({ name: 'bull_job_id', nullable: true })
+  @Column({ name: 'bull_job_id', type: 'varchar', nullable: true })
   bullJobId: string | null;
 
   @Column({ type: jsonColumnType(), nullable: true })

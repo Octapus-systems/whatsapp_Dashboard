@@ -79,7 +79,7 @@ export function Login({ onLogin }: LoginProps) {
         <p className="login-help">
           {t('login.help')}{' '}
           <a
-            href="https://github.com/rmyndharis/Wirebot/blob/main/docs/01-project-overview.md"
+            href="https://github.com/jishad/Wirebot/blob/main/docs/01-project-overview.md"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -91,7 +91,7 @@ export function Login({ onLogin }: LoginProps) {
       <footer className="login-footer">
         <span>{t('login.footer')}</span>
         <a
-          href="https://github.com/rmyndharis/Wirebot"
+          href="https://github.com/jishad/Wirebot"
           target="_blank"
           rel="noopener noreferrer"
           className="github-link"

@@ -749,7 +749,7 @@ echo "🔄 Running migrations..."
 docker run --rm \
   -v $(pwd)/data:/app/data \
   -e DATABASE_URL=sqlite:///app/data/wirebot.db \
-  ghcr.io/rmyndharis/wirebot:0.2.0 \
+  ghcr.io/jishad/wirebot:0.2.0 \
   npm run migration:run
 
 # 4. Migrate configuration
@@ -834,7 +834,7 @@ set -e
 echo "🚀 Upgrading Wirebot v0.2.x → v1.0.0"
 
 # Pre-flight checks
-CURRENT_VERSION=$(docker inspect ghcr.io/rmyndharis/wirebot --format '{{.Config.Labels.version}}' 2>/dev/null || echo "unknown")
+CURRENT_VERSION=$(docker inspect ghcr.io/jishad/wirebot --format '{{.Config.Labels.version}}' 2>/dev/null || echo "unknown")
 echo "Current version: $CURRENT_VERSION"
 
 # 1. Comprehensive backup
@@ -887,7 +887,7 @@ echo "🔄 Running migrations..."
 docker run --rm \
   -v $(pwd)/data:/app/data \
   --env-file .env \
-  ghcr.io/rmyndharis/wirebot:1.0.0 \
+  ghcr.io/jishad/wirebot:1.0.0 \
   npm run migration:run
 
 # 6. Migrate webhooks to new format
@@ -896,7 +896,7 @@ docker run --rm \
   -v $(pwd)/data:/app/data \
   -v "$BACKUP_DIR/webhooks.json:/tmp/webhooks.json" \
   --env-file .env \
-  ghcr.io/rmyndharis/wirebot:1.0.0 \
+  ghcr.io/jishad/wirebot:1.0.0 \
   npm run cli -- migrate-webhooks /tmp/webhooks.json
 
 # 7. Start new version

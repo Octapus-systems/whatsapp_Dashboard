@@ -86,4 +86,4 @@ VITE_API_URL=http://localhost:2785
 
 ## 📄 License
 
-MIT License - Part of the [Wirebot](https://github.com/rmyndharis/Wirebot) project.
+MIT License - Part of the [Wirebot](https://github.com/jishad/Wirebot) project.

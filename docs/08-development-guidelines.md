@@ -727,7 +727,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/rmyndharis/Wirebot.git
+git clone https://github.com/jishad/Wirebot.git
 cd wirebot
 
 # 2. Install dependencies

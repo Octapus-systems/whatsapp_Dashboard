@@ -61,7 +61,7 @@
 
 ```bash
 # Clone repository
-git clone https://github.com/rmyndharis/Wirebot.git
+git clone https://github.com/jishad/Wirebot.git
 cd Wirebot
 
 # Install & configure
@@ -85,7 +85,7 @@ Access:
 
 ```bash
 # Clone repository
-git clone https://github.com/rmyndharis/Wirebot.git
+git clone https://github.com/jishad/Wirebot.git
 cd Wirebot
 
 # Start services

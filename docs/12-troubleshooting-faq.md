@@ -763,8 +763,8 @@ When creating GitHub issue, include:
 
 ### Community Resources
 
-- **GitHub Issues**: [github.com/rmyndharis/Wirebot/issues](https://github.com/rmyndharis/Wirebot/issues)
-- **Discussions**: [github.com/rmyndharis/Wirebot/discussions](https://github.com/rmyndharis/Wirebot/discussions)
+- **GitHub Issues**: [github.com/jishad/Wirebot/issues](https://github.com/jishad/Wirebot/issues)
+- **Discussions**: [github.com/jishad/Wirebot/discussions](https://github.com/jishad/Wirebot/discussions)
 - **Discord**: [discord.gg/wirebot](https://discord.gg/wirebot) (if available)
 - **Stack Overflow**: Tag with `wirebot`
 ---

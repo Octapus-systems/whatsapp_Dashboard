@@ -89,7 +89,7 @@ version: '3.8'
 
 services:
   wirebot:
-    image: ghcr.io/rmyndharis/wirebot:0.2.0
+    image: ghcr.io/jishad/wirebot:0.2.0
     deploy:
       replicas: 3
       update_config:
@@ -261,7 +261,7 @@ spec:
     spec:
       containers:
         - name: wirebot
-          image: ghcr.io/rmyndharis/wirebot:0.2.0
+          image: ghcr.io/jishad/wirebot:0.2.0
           ports:
             - containerPort: 3000
               name: http

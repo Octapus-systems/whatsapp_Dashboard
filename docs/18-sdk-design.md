@@ -1123,7 +1123,7 @@ class Messages
 ### Installation
 
 ```bash
-npm install @rmyndharis/n8n-nodes-wirebot
+npm install @jishad/n8n-nodes-wirebot
 ```
 
 ### Node Configuration

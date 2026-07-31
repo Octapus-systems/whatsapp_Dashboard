@@ -4,8 +4,8 @@
 
 Wirebot provides official n8n community nodes for integrating WhatsApp automation into n8n workflows. This enables users to build powerful automations combining WhatsApp messaging with hundreds of other services available in n8n.
 
-**Repository:** https://github.com/rmyndharis/Wirebot-n8n
-**npm Package:** `@rmyndharis/n8n-nodes-wirebot`
+**Repository:** https://github.com/jishad/Wirebot-n8n
+**npm Package:** `@jishad/n8n-nodes-wirebot`
 
 ## Architecture
 
@@ -28,7 +28,7 @@ Wirebot provides official n8n community nodes for integrating WhatsApp automatio
 
 1. Go to **Settings > Community Nodes**
 2. Select **Install**
-3. Enter `@rmyndharis/n8n-nodes-wirebot`
+3. Enter `@jishad/n8n-nodes-wirebot`
 4. Agree to the risks and install
 5. Restart n8n
 
@@ -36,7 +36,7 @@ Wirebot provides official n8n community nodes for integrating WhatsApp automatio
 
 ```bash
 cd ~/.n8n/nodes
-npm install @rmyndharis/n8n-nodes-wirebot
+npm install @jishad/n8n-nodes-wirebot
 ```
 
 ## Nodes
@@ -236,7 +236,7 @@ Always use the correct format for chat IDs:
 ### Building from Source
 
 ```bash
-git clone https://github.com/rmyndharis/Wirebot-n8n.git
+git clone https://github.com/jishad/Wirebot-n8n.git
 cd Wirebot-n8n
 npm install
 npm run build

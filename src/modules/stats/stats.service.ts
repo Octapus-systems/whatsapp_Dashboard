@@ -319,8 +319,8 @@ export class StatsService {
       .addSelect(`SUM(CASE WHEN m.direction = 'outgoing' THEN 1 ELSE 0 END)`, 'sent')
       .addSelect(`SUM(CASE WHEN m.direction = 'incoming' THEN 1 ELSE 0 END)`, 'received')
       .where('m.createdAt >= :since', { since })
-      .groupBy('timestamp')
-      .orderBy('timestamp', 'ASC')
+      .groupBy(`strftime('${formatStr}', m.createdAt)`)
+      .orderBy(`strftime('${formatStr}', m.createdAt)`, 'ASC')
       .getRawMany<{ timestamp: string; sent: string; received: string }>();
 
     return raw.map(r => ({
@@ -340,8 +340,8 @@ export class StatsService {
       .addSelect(`SUM(CASE WHEN m.direction = 'incoming' THEN 1 ELSE 0 END)`, 'received')
       .where('m.sessionId = :sessionId', { sessionId })
       .andWhere('m.createdAt >= :since', { since })
-      .groupBy('hour')
-      .orderBy('hour', 'ASC')
+      .groupBy(`CAST(strftime('%H', m.createdAt) AS INTEGER)`)
+      .orderBy(`CAST(strftime('%H', m.createdAt) AS INTEGER)`, 'ASC')
       .getRawMany<{ hour: string; sent: string; received: string }>();
 
     // Fill in missing hours

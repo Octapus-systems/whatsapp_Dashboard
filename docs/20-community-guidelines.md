@@ -61,7 +61,7 @@ git clone https://github.com/YOUR_USERNAME/wirebot.git
 cd wirebot
 
 # 3. Add upstream remote
-git remote add upstream https://github.com/rmyndharis/Wirebot.git
+git remote add upstream https://github.com/jishad/Wirebot.git
 
 # 4. Install dependencies
 npm install
