@@ -17,12 +17,14 @@ import { EventsModule } from './modules/events/events.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { GroupModule } from './modules/group/group.module';
 import { LabelModule } from './modules/label/label.module';
+import { ContactTagModule } from './modules/contact-tag/contact-tag.module';
 import { ChannelModule } from './modules/channel/channel.module';
 import { CacheModule } from './common/cache';
 import { StorageModule } from './common/storage/storage.module';
 import { StatsModule } from './modules/stats/stats.module';
 import { StatusModule } from './modules/status/status.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
+import { TemplateModule } from './modules/template/template.module';
 import { HooksModule } from './core/hooks';
 import { PluginsModule } from './core/plugins';
 import { PluginsApiModule } from './modules/plugins/plugins.module';
@@ -100,6 +102,8 @@ if (process.env.QUEUE_ENABLED === 'true') {
             __dirname + '/modules/session/**/*.entity{.ts,.js}',
             __dirname + '/modules/webhook/**/*.entity{.ts,.js}',
             __dirname + '/modules/message/**/*.entity{.ts,.js}',
+            __dirname + '/modules/template/**/*.entity{.ts,.js}',
+            __dirname + '/modules/contact-tag/**/*.entity{.ts,.js}',
           ],
           migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
           logging: configService.get<boolean>('dataDatabase.logging', false),
@@ -186,11 +190,13 @@ if (process.env.QUEUE_ENABLED === 'true') {
     ContactModule,
     GroupModule,
     LabelModule, // Phase 3: Labels Management
+    ContactTagModule, // Contact tagging/segmentation
     ChannelModule, // Phase 3: Channels/Newsletter
     StatsModule, // Phase 3: Statistics Dashboard
     StatusModule, // Phase 3: Status/Stories API
     CatalogModule, // Phase 3: Catalog API (WhatsApp Business)
     PluginsApiModule, // Phase 5: Plugins API
+    TemplateModule, // Message Templates (quick replies)
   ],
 })
 export class AppModule {}

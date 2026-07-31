@@ -60,9 +60,12 @@
     "webhooks": "Webhooks",
     "apiKeys": "מפתחות API",
     "messageTester": "בדיקת הודעות",
+    "broadcast": "תפוצה",
     "infrastructure": "תשתית",
     "plugins": "תוספים",
-    "logs": "לוגים"
+    "logs": "לוגים",
+    "tags": "תגיות",
+    "templates": "תבניות"
   },
   "errorBoundary": {
     "title": "משהו השתבש",
@@ -104,7 +107,20 @@
     "view": "צפייה",
     "disconnect": "ניתוק",
     "errorPrefix": "שגיאה: {{message}}",
-    "loadError": "טעינת הנתונים נכשלה"
+    "loadError": "טעינת הנתונים נכשלה",
+    "analytics": {
+      "messageVolume": "נפח הודעות",
+      "sessionStatus": "סטטוס וזמן פעילות של Sessions",
+      "sessionStatusSubtitle": "התפלגות הסטטוסים הנוכחית",
+      "sent": "נשלחו",
+      "received": "התקבלו",
+      "noMessageData": "אין עדיין פעילות הודעות בתקופה זו.",
+      "noSessionData": "אין עדיין נתוני Session זמינים.",
+      "period": {
+        "14d": "14 ימים",
+        "30d": "30 ימים"
+      }
+    }
   },
   "sessionStatus": {
     "created": "חדש",
@@ -228,7 +244,9 @@
       "updateFailed": "עדכון ה-Webhook נכשל: {{message}}",
       "testOk": "בדיקת ה-Webhook הצליחה! סטטוס: {{status}}",
       "testFailed": "בדיקת ה-Webhook נכשלה: {{message}}",
-      "testError": "בדיקת ה-Webhook נכשלה: {{message}}"
+      "testError": "בדיקת ה-Webhook נכשלה: {{message}}",
+      "testTimeout": "ה-Webhook לא הגיב בזמן",
+      "testCancelled": "בדיקת ה-Webhook בוטלה"
     },
     "actions": {
       "test": "בדיקה",
@@ -242,6 +260,24 @@
       "session.disconnected": "כאשר Session מתנתק",
       "session.qr": "כאשר נוצר קוד QR",
       "all": "כל האירועים"
+    },
+    "history": {
+      "title": "היסטוריית שליחות",
+      "empty": "אין עדיין ניסיונות שליחה",
+      "success": "הצלחה",
+      "failed": "נכשל",
+      "noResponse": "אין תגובה",
+      "request": "גוף הבקשה",
+      "requestHeaders": "כותרות הבקשה",
+      "response": "תגובה",
+      "loadDetailFailed": "טעינת פרטי השליחה נכשלה: {{message}}",
+      "columns": {
+        "status": "סטטוס",
+        "event": "אירוע",
+        "responseCode": "קוד תגובה",
+        "duration": "משך זמן",
+        "timestamp": "חותמת זמן"
+      }
     }
   },
   "apiKeys": {
@@ -361,6 +397,45 @@
       "error": "שגיאה"
     },
     "sendFailed": "שליחת ההודעה נכשלה"
+  },
+  "broadcast": {
+    "title": "תפוצה",
+    "subtitle": "שליחת הודעה אחת למספר נמענים, מיידית או מתוזמנת",
+    "compose": "יצירת תפוצה",
+    "session": "Session",
+    "noReadySessions": "אין Sessions מוכנים",
+    "sessionOptionPhoneNone": "אין טלפון",
+    "recipients": "נמענים",
+    "allContacts": "כל אנשי הקשר",
+    "selectContacts": "בחירת אנשי קשר",
+    "allContactsHint": "שליחה לכל איש קשר שאינו חסום ב-Session זה",
+    "loadingContacts": "טוען אנשי קשר...",
+    "noContactsFound": "לא נמצאו אנשי קשר",
+    "selectedCount": "{{count}} נמען נבחר",
+    "selectedCount_other": "{{count}} נמענים נבחרו",
+    "messageContent": "תוכן ההודעה",
+    "messagePlaceholder": "יש להזין את ההודעה לתפוצה...",
+    "scheduleForLater": "תזמון למועד מאוחר יותר",
+    "scheduleInPastError": "מועד התזמון חייב להיות בעתיד",
+    "sendNow": "שליחה מיידית",
+    "schedule": "תזמון תפוצה",
+    "sending": "שולח...",
+    "viewOnly": "צפייה בלבד",
+    "createSuccess": "תפוצה {{id}} נוצרה עבור {{count}} נמענים",
+    "createFailed": "יצירת התפוצה נכשלה",
+    "history": "היסטוריית תפוצות",
+    "noBroadcasts": "אין עדיין תפוצות",
+    "progressSent": "{{sent}} / {{total}} נשלחו",
+    "progressFailed": "{{failed}} נכשלו",
+    "cancel": "ביטול",
+    "status": {
+      "pending": "ממתין",
+      "scheduled": "מתוזמן",
+      "processing": "בשליחה",
+      "completed": "הושלם",
+      "cancelled": "בוטל",
+      "failed": "נכשל"
+    }
   },
   "infrastructure": {
     "title": "תשתית",
@@ -520,6 +595,7 @@
     "statusDisconnected": "לא מחובר",
     "sessionNotReadyTitle": "Session לא מחובר",
     "sessionNotReadyDesc": "ה-Session שנבחר אינו פעיל. יש להפעיל את ה-Session בדף ה-Sessions תחילה.",
+    "goToSessions": "מעבר לדף Sessions",
     "searchPlaceholder": "חיפוש שיחות...",
     "loadingChats": "טוען שיחות...",
     "noChatsFound": "לא נמצאו שיחות",
@@ -530,7 +606,16 @@
     "sendReply": "שליחת הודעה",
     "noChatSelectedTitle": "השיחות שלך",
     "noChatSelectedDesc": "יש לבחור איש קשר או קבוצה מהרשימה בצד כדי להציג את היסטוריית ההודעות ולענות.",
-    "addEmoji": "הוספת אימוג'י",
+    "realtimeDisconnected": "עדכונים בזמן אמת מנותקים — ייתכן עיכוב בהודעות. מתחבר מחדש...",
+    "insertTemplate": "הוספת תבנית",
+    "templatesHeader": "תבניות הודעה",
+    "noTemplates": "עדיין אין תבניות. ניתן ליצור תבנית בדף התבניות.",
+    "claim": "שיוך אליי",
+    "claimChat": "שיוך שיחה זו אליי",
+    "unassign": "ביטול שיוך",
+    "unassignChat": "שחרור השיוך",
+    "assignedTo": "משויך ל-{{name}}",
+    "assignedToMe": "משויך אליך",
     "mediaType": {
       "image": "תמונה",
       "video": "וידאו",
@@ -538,6 +623,69 @@
       "document": "מסמך",
       "location": "מיקום משותף",
       "contactCard": "כרטיס איש קשר"
+    }
+  },
+  "templates": {
+    "title": "תבניות הודעה",
+    "subtitle": "יצירת תבניות תגובה מהירה לשימוש חוזר כדי להאיץ את המענה שלך",
+    "addTemplate": "תבנית חדשה",
+    "createTitle": "יצירת תבנית",
+    "editTitle": "עריכת תבנית",
+    "deleteTitle": "מחיקת תבנית",
+    "deleteConfirm": "האם אתה בטוח שברצונך למחוק תבנית זו?",
+    "name": "שם",
+    "namePlaceholder": "לדוגמה, ברכה",
+    "content": "תוכן",
+    "contentPlaceholder": "הקלד את ההודעה שתוכנס בעת שימוש בתבנית זו...",
+    "saveChanges": "שמירת שינויים",
+    "columns": {
+      "name": "שם",
+      "content": "תוכן",
+      "actions": "פעולות"
+    },
+    "actions": {
+      "edit": "עריכה",
+      "delete": "מחיקה"
+    },
+    "empty": {
+      "title": "לא נוצרו תבניות",
+      "description": "צור תבנית כדי להאיץ תגובות ב-ChatViewer וב-Message Tester"
+    },
+    "toasts": {
+      "created": "התבנית נוצרה בהצלחה",
+      "createFailed": "יצירת התבנית נכשלה: {{message}}",
+      "updated": "התבנית עודכנה בהצלחה",
+      "updateFailed": "עדכון התבנית נכשל: {{message}}",
+      "deleted": "התבנית נמחקה בהצלחה",
+      "deleteFailed": "מחיקת התבנית נכשלה: {{message}}"
+    }
+  },
+  "tags": {
+    "title": "תגיות",
+    "subtitle": "יצירה וניהול של תגיות לסידור וסינון אנשי הקשר שלך",
+    "addTag": "תגית חדשה",
+    "createTitle": "יצירת תגית",
+    "editTitle": "עריכת תגית",
+    "deleteTitle": "מחיקת תגית",
+    "deleteConfirm": "האם אתה בטוח שברצונך למחוק תגית זו? היא תוסר מכל אנשי הקשר שאליהם היא משויכת.",
+    "namePlaceholder": "לדוגמה, VIP",
+    "color": "צבע",
+    "columns": {
+      "name": "שם",
+      "color": "צבע",
+      "created": "נוצר"
+    },
+    "empty": {
+      "title": "לא נוצרו תגיות",
+      "description": "צור תגית כדי להתחיל לסדר ולסנן את אנשי הקשר שלך"
+    },
+    "toasts": {
+      "created": "התגית נוצרה בהצלחה",
+      "createFailed": "יצירת התגית נכשלה: {{message}}",
+      "updated": "התגית עודכנה בהצלחה",
+      "updateFailed": "עדכון התגית נכשל: {{message}}",
+      "deleted": "התגית נמחקה בהצלחה",
+      "deleteFailed": "מחיקת התגית נכשלה: {{message}}"
     }
   }
 }

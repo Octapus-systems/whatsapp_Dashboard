@@ -26,4 +26,10 @@ export class StatsController {
   async getSessionStats(@Param('sessionId') sessionId: string) {
     return this.statsService.getSessionStats(sessionId);
   }
+
+  @Get('sessions-uptime')
+  @ApiOperation({ summary: 'Get per-session status/uptime summary' })
+  async getSessionsUptime() {
+    return this.statsService.getSessionsUptime();
+  }
 }

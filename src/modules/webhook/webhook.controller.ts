@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { WebhookService } from './webhook.service';
 import { CreateWebhookDto, UpdateWebhookDto, WebhookResponseDto } from './dto';
 import { Webhook } from './entities/webhook.entity';
+import { WebhookDelivery } from './entities/webhook-delivery.entity';
 import { RequireRole } from '../auth/decorators/auth.decorators';
 import { ApiKeyRole } from '../auth/entities/api-key.entity';
 
@@ -77,6 +78,33 @@ export class WebhookController {
     @Param('id') id: string,
   ): Promise<{ success: boolean; statusCode?: number; error?: string }> {
     return this.webhookService.test(sessionId, id);
+  }
+
+  @Get(':id/deliveries')
+  @ApiOperation({ summary: 'List past delivery attempts for a webhook (most recent first)' })
+  @ApiParam({ name: 'sessionId', description: 'Session ID' })
+  @ApiParam({ name: 'id', description: 'Webhook ID' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (default 1)' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Page size (default 20, max 100)' })
+  @ApiResponse({ status: 200, description: 'Paginated list of delivery attempts' })
+  @ApiResponse({ status: 404, description: 'Webhook not found' })
+  async getDeliveries(
+    @Param('id') id: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ): Promise<{ items: WebhookDelivery[]; total: number; page: number; limit: number }> {
+    return this.webhookService.getDeliveries(id, page ? parseInt(page, 10) : undefined, limit ? parseInt(limit, 10) : undefined);
+  }
+
+  @Get(':id/deliveries/:deliveryId')
+  @ApiOperation({ summary: 'Get full request/response payload details for a single delivery attempt' })
+  @ApiParam({ name: 'sessionId', description: 'Session ID' })
+  @ApiParam({ name: 'id', description: 'Webhook ID' })
+  @ApiParam({ name: 'deliveryId', description: 'Delivery record ID' })
+  @ApiResponse({ status: 200, description: 'Delivery attempt details', type: WebhookDelivery })
+  @ApiResponse({ status: 404, description: 'Webhook or delivery not found' })
+  async getDelivery(@Param('id') id: string, @Param('deliveryId') deliveryId: string): Promise<WebhookDelivery> {
+    return this.webhookService.getDelivery(id, deliveryId);
   }
 
   @Delete(':id')

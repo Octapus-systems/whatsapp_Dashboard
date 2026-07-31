@@ -6,6 +6,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import * as crypto from 'crypto';
 import { Webhook } from './entities/webhook.entity';
+import { WebhookDelivery } from './entities/webhook-delivery.entity';
 import { CreateWebhookDto, UpdateWebhookDto } from './dto';
 import { createLogger } from '../../common/services/logger.service';
 import { QUEUE_NAMES } from '../queue/queue-names';
@@ -40,6 +41,8 @@ export class WebhookService {
   constructor(
     @InjectRepository(Webhook, 'data')
     private readonly webhookRepository: Repository<Webhook>,
+    @InjectRepository(WebhookDelivery, 'data')
+    private readonly webhookDeliveryRepository: Repository<WebhookDelivery>,
     private readonly configService: ConfigService,
     private readonly hookManager: HookManager,
     @Optional()
@@ -132,6 +135,7 @@ export class WebhookService {
       headers['X-Wirebot-Signature'] = this.generateSignature(body, webhook.secret);
     }
 
+    const startTime = Date.now();
     try {
       const response = await fetch(webhook.url, {
         method: 'POST',
@@ -139,17 +143,133 @@ export class WebhookService {
         body,
         signal: AbortSignal.timeout(10000),
       });
+      const durationMs = Date.now() - startTime;
+      const responseBodyText = await this.safeReadText(response);
+
+      await this.recordDelivery({
+        webhookId: webhook.id,
+        deliveryId: testPayload.deliveryId,
+        event: 'test',
+        attempt: 1,
+        statusCode: response.status,
+        success: response.ok,
+        durationMs,
+        requestPayload: testPayload,
+        requestHeaders: headers,
+        responsePayload: responseBodyText,
+        error: response.ok ? null : `HTTP ${response.status}: ${response.statusText}`,
+      });
 
       return {
         success: response.ok,
         statusCode: response.status,
       };
     } catch (error) {
+      const durationMs = Date.now() - startTime;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      await this.recordDelivery({
+        webhookId: webhook.id,
+        deliveryId: testPayload.deliveryId,
+        event: 'test',
+        attempt: 1,
+        statusCode: null,
+        success: false,
+        durationMs,
+        requestPayload: testPayload,
+        requestHeaders: headers,
+        responsePayload: null,
+        error: errorMessage,
+      });
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
       };
     }
+  }
+
+  /**
+   * Persist a single delivery attempt row. Failures to persist are logged but
+   * never thrown — delivery-history bookkeeping must not affect the actual
+   * webhook delivery flow.
+   */
+  private async recordDelivery(params: {
+    webhookId: string;
+    deliveryId: string;
+    event: string;
+    attempt: number;
+    statusCode: number | null;
+    success: boolean;
+    durationMs: number;
+    requestPayload: unknown;
+    requestHeaders: Record<string, string>;
+    responsePayload?: unknown;
+    error?: string | null;
+  }): Promise<void> {
+    try {
+      await this.webhookDeliveryRepository.save(
+        this.webhookDeliveryRepository.create({
+          webhookId: params.webhookId,
+          deliveryId: params.deliveryId,
+          event: params.event,
+          attempt: params.attempt,
+          statusCode: params.statusCode,
+          success: params.success,
+          durationMs: params.durationMs,
+          requestPayload: params.requestPayload as Record<string, unknown>,
+          requestHeaders: params.requestHeaders,
+          responsePayload: (params.responsePayload as Record<string, unknown> | string) ?? null,
+          error: params.error ?? null,
+        }),
+      );
+    } catch (persistError) {
+      this.logger.error(`Failed to persist webhook delivery record`, String(persistError), {
+        webhookId: params.webhookId,
+        deliveryId: params.deliveryId,
+        action: 'webhook_delivery_record_failed',
+      });
+    }
+  }
+
+  /**
+   * List past delivery attempts for a webhook, most recent first.
+   */
+  async getDeliveries(
+    webhookId: string,
+    page = 1,
+    limit = 20,
+  ): Promise<{ items: WebhookDelivery[]; total: number; page: number; limit: number }> {
+    await this.findOne(webhookId); // 404s if webhook doesn't exist
+
+    const safeLimit = Math.min(Math.max(limit, 1), 100);
+    const safePage = Math.max(page, 1);
+
+    const [items, total] = await this.webhookDeliveryRepository.findAndCount({
+      where: { webhookId },
+      order: { createdAt: 'DESC' },
+      skip: (safePage - 1) * safeLimit,
+      take: safeLimit,
+    });
+
+    return { items, total, page: safePage, limit: safeLimit };
+  }
+
+  /**
+   * Get full details (including request/response payloads) for a single delivery attempt.
+   */
+  async getDelivery(webhookId: string, deliveryRowId: string): Promise<WebhookDelivery> {
+    await this.findOne(webhookId); // 404s if webhook doesn't exist
+
+    const delivery = await this.webhookDeliveryRepository.findOne({
+      where: { id: deliveryRowId, webhookId },
+    });
+
+    if (!delivery) {
+      throw new NotFoundException(`Webhook delivery with id '${deliveryRowId}' not found`);
+    }
+
+    return delivery;
   }
 
   async dispatch(sessionId: string, event: string, data: Record<string, unknown>): Promise<void> {
@@ -314,6 +434,7 @@ export class WebhookService {
       headers['X-Wirebot-Signature'] = this.generateSignature(body, webhook.secret);
     }
 
+    const startTime = Date.now();
     try {
       const response = await fetch(webhook.url, {
         method: 'POST',
@@ -321,10 +442,38 @@ export class WebhookService {
         body,
         signal: AbortSignal.timeout(this.configService.get<number>('webhook.timeout', 10000)),
       });
+      const durationMs = Date.now() - startTime;
+      const responseBodyText = await this.safeReadText(response);
 
       if (!response.ok) {
+        await this.recordDelivery({
+          webhookId: webhook.id,
+          deliveryId: payload.deliveryId,
+          event: payload.event,
+          attempt,
+          statusCode: response.status,
+          success: false,
+          durationMs,
+          requestPayload: payload,
+          requestHeaders: headers,
+          responsePayload: responseBodyText,
+          error: `HTTP ${response.status}: ${response.statusText}`,
+        });
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+
+      await this.recordDelivery({
+        webhookId: webhook.id,
+        deliveryId: payload.deliveryId,
+        event: payload.event,
+        attempt,
+        statusCode: response.status,
+        success: true,
+        durationMs,
+        requestPayload: payload,
+        requestHeaders: headers,
+        responsePayload: responseBodyText,
+      });
 
       // Update last triggered timestamp
       await this.webhookRepository.update(webhook.id, {
@@ -349,6 +498,25 @@ export class WebhookService {
         await this.delay(delay * attempt);
         return this.deliverWebhook(webhook, payload, headers, attempt + 1);
       }
+
+      if (!(error instanceof Error && error.message.startsWith('HTTP '))) {
+        // Network error / timeout — no HTTP response was received, and it wasn't
+        // already recorded above (that branch only fires for non-ok HTTP responses).
+        await this.recordDelivery({
+          webhookId: webhook.id,
+          deliveryId: payload.deliveryId,
+          event: payload.event,
+          attempt,
+          statusCode: null,
+          success: false,
+          durationMs: Date.now() - startTime,
+          requestPayload: payload,
+          requestHeaders: headers,
+          responsePayload: null,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
       throw error;
     }
   }
@@ -361,5 +529,18 @@ export class WebhookService {
 
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Safely read a response body as text, tolerating responses that don't
+   * implement `.text()` (e.g. minimal mocks in tests).
+   */
+  private async safeReadText(response: Response | { text?: () => Promise<string> }): Promise<string> {
+    try {
+      if (typeof response.text !== 'function') return '';
+      return await response.text();
+    } catch {
+      return '';
+    }
   }
 }

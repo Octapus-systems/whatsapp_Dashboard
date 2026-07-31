@@ -39,6 +39,20 @@ export interface SessionStats {
   hourlyActivity: Array<{ hour: number; sent: number; received: number }>;
 }
 
+export interface SessionUptimeEntry {
+  id: string;
+  name: string;
+  status: string;
+  connectedAt: string | null;
+  lastActiveAt: string | null;
+  uptimeMs: number | null;
+}
+
+export interface SessionsUptimeSummary {
+  sessions: SessionUptimeEntry[];
+  statusDistribution: Record<string, number>;
+}
+
 @Injectable()
 export class StatsService {
   constructor(
@@ -111,7 +125,7 @@ export class StatsService {
     };
   }
 
-  async getMessageStats(period: '24h' | '7d' | '30d'): Promise<MessageStats> {
+  async getMessageStats(period: '24h' | '7d' | '14d' | '30d'): Promise<MessageStats> {
     const since = this.getPeriodStart(period);
     const interval = period === '24h' ? 'hour' : 'day';
 
@@ -243,13 +257,53 @@ export class StatsService {
     };
   }
 
-  private getPeriodStart(period: '24h' | '7d' | '30d'): Date {
+  /**
+   * Per-session status/uptime summary, sourced directly from the sessions
+   * table (connectedAt / lastActiveAt / status). There is no dedicated
+   * uptime-tracking table in this codebase, so "uptime" is approximated as
+   * the time since connectedAt for currently-READY sessions. For sessions
+   * that are not currently ready, we fall back to the last known connected
+   * duration (lastActiveAt - connectedAt) when both timestamps exist, or
+   * null when there's not enough data to compute anything meaningful.
+   */
+  async getSessionsUptime(): Promise<SessionsUptimeSummary> {
+    const sessions = await this.sessionRepo.find({ order: { createdAt: 'ASC' } });
+
+    const statusDistribution: Record<string, number> = {};
+    const now = Date.now();
+
+    const entries: SessionUptimeEntry[] = sessions.map(session => {
+      statusDistribution[session.status] = (statusDistribution[session.status] || 0) + 1;
+
+      let uptimeMs: number | null = null;
+      if (session.status === SessionStatus.READY && session.connectedAt) {
+        uptimeMs = now - new Date(session.connectedAt).getTime();
+      } else if (session.connectedAt && session.lastActiveAt) {
+        uptimeMs = new Date(session.lastActiveAt).getTime() - new Date(session.connectedAt).getTime();
+      }
+
+      return {
+        id: session.id,
+        name: session.name,
+        status: session.status,
+        connectedAt: session.connectedAt ? new Date(session.connectedAt).toISOString() : null,
+        lastActiveAt: session.lastActiveAt ? new Date(session.lastActiveAt).toISOString() : null,
+        uptimeMs: uptimeMs !== null && uptimeMs >= 0 ? uptimeMs : null,
+      };
+    });
+
+    return { sessions: entries, statusDistribution };
+  }
+
+  private getPeriodStart(period: '24h' | '7d' | '14d' | '30d'): Date {
     const now = new Date();
     switch (period) {
       case '24h':
         return new Date(now.getTime() - 24 * 60 * 60 * 1000);
       case '7d':
         return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      case '14d':
+        return new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
       case '30d':
         return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }

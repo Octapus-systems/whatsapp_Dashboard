@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Plus,
@@ -11,8 +11,11 @@ import {
   Webhook as WebhookIcon,
   Check,
   AlertTriangle,
+  History,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
-import { webhookApi, type Webhook } from '../services/api';
+import { webhookApi, type Webhook, type WebhookDelivery } from '../services/api';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useRole } from '../hooks/useRole';
 import {
@@ -34,6 +37,21 @@ const availableEventNames = [
   '*',
 ] as const;
 
+const TEST_TIMEOUT_MS = 15_000;
+
+/** Pretty-print a delivery's response payload, whether it's JSON text, a plain string, or already an object. */
+function formatResponsePayload(payload: unknown): string {
+  if (payload == null) return '';
+  if (typeof payload === 'string') {
+    try {
+      return JSON.stringify(JSON.parse(payload), null, 2);
+    } catch {
+      return payload;
+    }
+  }
+  return JSON.stringify(payload, null, 2);
+}
+
 export function Webhooks() {
   const { t } = useTranslation();
   useDocumentTitle(t('webhooks.title'));
@@ -47,11 +65,27 @@ export function Webhooks() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<{ sessionId: string; id: string; url: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    sessionId: string;
+    id: string;
+    url: string;
+    events: string[];
+  } | null>(null);
   const [editWebhook, setEditWebhook] = useState<Webhook | null>(null);
   const [newWebhook, setNewWebhook] = useState({ url: '', events: ['message.received'], sessionId: '' });
   const [testingId, setTestingId] = useState<string | null>(null);
+  const testTokenRef = useRef(0);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // ── Delivery history drawer ────────────────────────────────────────
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyTarget, setHistoryTarget] = useState<{ sessionId: string; id: string; url: string } | null>(null);
+  const [deliveries, setDeliveries] = useState<WebhookDelivery[]>([]);
+  const [loadingDeliveries, setLoadingDeliveries] = useState(false);
+  const [deliveriesError, setDeliveriesError] = useState<string | null>(null);
+  const [expandedDeliveryRowId, setExpandedDeliveryRowId] = useState<string | null>(null);
+  const [deliveryDetail, setDeliveryDetail] = useState<WebhookDelivery | null>(null);
+  const [loadingDeliveryDetail, setLoadingDeliveryDetail] = useState(false);
 
   const eventDescription = (name: string) => {
     if (name === '*') return t('webhooks.eventDescriptions.all');
@@ -86,8 +120,8 @@ export function Webhooks() {
     }
   };
 
-  const confirmDelete = (sessionId: string, id: string, url: string) => {
-    setDeleteTarget({ sessionId, id, url });
+  const confirmDelete = (sessionId: string, id: string, url: string, events: string[]) => {
+    setDeleteTarget({ sessionId, id, url, events });
     setShowDeleteModal(true);
   };
 
@@ -109,9 +143,23 @@ export function Webhooks() {
   };
 
   const handleTest = async (sessionId: string, id: string) => {
+    // Clicking the Test button again while a test is already in flight for this
+    // webhook cancels/dismisses the stuck state instead of queuing another request.
+    if (testingId === id) {
+      testTokenRef.current += 1;
+      setTestingId(null);
+      setToast({ type: 'error', message: t('webhooks.toasts.testCancelled') });
+      return;
+    }
+
+    const token = ++testTokenRef.current;
     setTestingId(id);
     try {
-      const result = await webhookApi.test(sessionId, id);
+      const timeout = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error(t('webhooks.toasts.testTimeout'))), TEST_TIMEOUT_MS);
+      });
+      const result = await Promise.race([webhookApi.test(sessionId, id), timeout]);
+      if (testTokenRef.current !== token) return; // superseded or cancelled by the user
       if (result.success) {
         setToast({ type: 'success', message: t('webhooks.toasts.testOk', { status: result.statusCode }) });
       } else {
@@ -121,6 +169,7 @@ export function Webhooks() {
         });
       }
     } catch (err) {
+      if (testTokenRef.current !== token) return; // superseded or cancelled by the user
       setToast({
         type: 'error',
         message: t('webhooks.toasts.testError', {
@@ -128,7 +177,63 @@ export function Webhooks() {
         }),
       });
     } finally {
-      setTestingId(null);
+      if (testTokenRef.current === token) setTestingId(null);
+    }
+  };
+
+  const loadDeliveries = useCallback(async (sessionId: string, id: string) => {
+    setLoadingDeliveries(true);
+    setDeliveriesError(null);
+    try {
+      const result = await webhookApi.getDeliveries(sessionId, id);
+      setDeliveries(result.items);
+    } catch (err) {
+      setDeliveriesError(err instanceof Error ? err.message : t('common.unknownError'));
+    } finally {
+      setLoadingDeliveries(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const openHistory = (webhook: Webhook) => {
+    setHistoryTarget({ sessionId: webhook.sessionId, id: webhook.id, url: webhook.url });
+    setExpandedDeliveryRowId(null);
+    setDeliveryDetail(null);
+    setShowHistoryModal(true);
+    void loadDeliveries(webhook.sessionId, webhook.id);
+  };
+
+  const closeHistory = () => {
+    setShowHistoryModal(false);
+    setHistoryTarget(null);
+    setDeliveries([]);
+    setExpandedDeliveryRowId(null);
+    setDeliveryDetail(null);
+  };
+
+  const toggleDeliveryRow = async (delivery: WebhookDelivery) => {
+    if (!historyTarget) return;
+    if (expandedDeliveryRowId === delivery.id) {
+      setExpandedDeliveryRowId(null);
+      setDeliveryDetail(null);
+      return;
+    }
+    setExpandedDeliveryRowId(delivery.id);
+    setDeliveryDetail(null);
+    setLoadingDeliveryDetail(true);
+    try {
+      const full = await webhookApi.getDelivery(historyTarget.sessionId, historyTarget.id, delivery.id);
+      setDeliveryDetail(full);
+    } catch (err) {
+      setToast({
+        type: 'error',
+        message: t('webhooks.history.loadDetailFailed', {
+          message: err instanceof Error ? err.message : t('common.unknownError'),
+        }),
+      });
+      setExpandedDeliveryRowId(null);
+    } finally {
+      setLoadingDeliveryDetail(false);
     }
   };
 
@@ -346,6 +451,16 @@ export function Webhooks() {
               >
                 {deleteTarget.url}
               </code>
+              <div style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}>
+                <div>
+                  <strong>{t('webhooks.session')}:</strong>{' '}
+                  {sessions.find(s => s.id === deleteTarget.sessionId)?.name ||
+                    deleteTarget.sessionId.substring(0, 8)}
+                </div>
+                <div style={{ marginTop: '0.35rem' }}>
+                  <strong>{t('webhooks.events')}:</strong> {deleteTarget.events.join(', ')}
+                </div>
+              </div>
             </div>
             <div className="modal-footer">
               <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>
@@ -353,6 +468,107 @@ export function Webhooks() {
               </button>
               <button className="btn-danger" onClick={handleDelete}>
                 {t('common.delete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showHistoryModal && historyTarget && (
+        <div className="modal-overlay" onClick={closeHistory}>
+          <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{t('webhooks.history.title')}</h2>
+              <button className="btn-icon" onClick={closeHistory}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <code className="history-webhook-url">{historyTarget.url}</code>
+
+              {loadingDeliveries ? (
+                <div className="history-loading">
+                  <Loader2 size={24} className="animate-spin" />
+                </div>
+              ) : deliveriesError ? (
+                <div className="history-error">
+                  <AlertTriangle size={18} />
+                  <span>{deliveriesError}</span>
+                </div>
+              ) : deliveries.length === 0 ? (
+                <div className="history-empty">
+                  <p>{t('webhooks.history.empty')}</p>
+                </div>
+              ) : (
+                <div className="delivery-list">
+                  <div className="delivery-row delivery-row-header">
+                    <span></span>
+                    <span>{t('webhooks.history.columns.status')}</span>
+                    <span>{t('webhooks.history.columns.event')}</span>
+                    <span>{t('webhooks.history.columns.responseCode')}</span>
+                    <span>{t('webhooks.history.columns.duration')}</span>
+                    <span>{t('webhooks.history.columns.timestamp')}</span>
+                  </div>
+                  {deliveries.map(delivery => (
+                    <div key={delivery.id} className="delivery-row-group">
+                      <button
+                        type="button"
+                        className="delivery-row"
+                        onClick={() => void toggleDeliveryRow(delivery)}
+                      >
+                        <span className="delivery-expand-icon">
+                          {expandedDeliveryRowId === delivery.id ? (
+                            <ChevronDown size={14} />
+                          ) : (
+                            <ChevronRight size={14} />
+                          )}
+                        </span>
+                        <span>
+                          <span className={`status-badge ${delivery.success ? 'active' : 'inactive'}`}>
+                            {delivery.success ? t('webhooks.history.success') : t('webhooks.history.failed')}
+                          </span>
+                        </span>
+                        <span className="delivery-event">{delivery.event}</span>
+                        <span>{delivery.statusCode ?? t('webhooks.history.noResponse')}</span>
+                        <span>{delivery.durationMs != null ? `${delivery.durationMs}ms` : '—'}</span>
+                        <span className="delivery-timestamp">{new Date(delivery.createdAt).toLocaleString()}</span>
+                      </button>
+
+                      {expandedDeliveryRowId === delivery.id && (
+                        <div className="delivery-detail">
+                          {loadingDeliveryDetail ? (
+                            <div className="history-loading">
+                              <Loader2 size={20} className="animate-spin" />
+                            </div>
+                          ) : deliveryDetail ? (
+                            <>
+                              {deliveryDetail.error && (
+                                <div className="delivery-detail-error">{deliveryDetail.error}</div>
+                              )}
+                              <div className="delivery-detail-section">
+                                <h4>{t('webhooks.history.request')}</h4>
+                                <pre>{JSON.stringify(deliveryDetail.requestPayload, null, 2)}</pre>
+                              </div>
+                              <div className="delivery-detail-section">
+                                <h4>{t('webhooks.history.requestHeaders')}</h4>
+                                <pre>{JSON.stringify(deliveryDetail.requestHeaders, null, 2)}</pre>
+                              </div>
+                              <div className="delivery-detail-section">
+                                <h4>{t('webhooks.history.response')}</h4>
+                                <pre>{formatResponsePayload(deliveryDetail.responsePayload)}</pre>
+                              </div>
+                            </>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={closeHistory}>
+                {t('common.close')}
               </button>
             </div>
           </div>
@@ -406,6 +622,13 @@ export function Webhooks() {
                     >
                       {testingId === webhook.id ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
                     </button>
+                    <button
+                      className="icon-btn"
+                      title={t('webhooks.history.title')}
+                      onClick={() => openHistory(webhook)}
+                    >
+                      <History size={16} />
+                    </button>
                     {canWrite && (
                       <>
                         <button className="icon-btn" title={t('webhooks.actions.edit')} onClick={() => openEdit(webhook)}>
@@ -414,7 +637,7 @@ export function Webhooks() {
                         <button
                           className="icon-btn danger"
                           title={t('webhooks.actions.delete')}
-                          onClick={() => confirmDelete(webhook.sessionId, webhook.id, webhook.url)}
+                          onClick={() => confirmDelete(webhook.sessionId, webhook.id, webhook.url, webhook.events)}
                         >
                           <Trash2 size={16} />
                         </button>

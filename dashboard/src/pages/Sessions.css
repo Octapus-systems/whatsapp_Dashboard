@@ -4,6 +4,21 @@
   box-sizing: border-box;
 }
 
+.error-banner {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.error-banner-text {
+  color: #ef4444;
+}
+
 .page-header {
   margin-bottom: 2rem;
   width: 100%;
@@ -147,6 +162,16 @@
 .qr-icon {
   color: var(--text-muted);
   margin-bottom: 0.75rem;
+}
+
+.qr-thumbnail {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  object-fit: contain;
+  background: white;
+  padding: 4px;
 }
 
 .qr-placeholder p {

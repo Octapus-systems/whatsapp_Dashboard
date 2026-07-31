@@ -35,10 +35,15 @@ export function Sessions() {
   const qrRefreshInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentSessionName = useRef<string>('');
   const sessionsRef = useRef<Session[]>([]);
+  const qrDataRef = useRef<typeof qrData>(null);
 
   useEffect(() => {
     sessionsRef.current = sessions;
   }, [sessions]);
+
+  useEffect(() => {
+    qrDataRef.current = qrData;
+  }, [qrData]);
 
   useWebSocket({
     onSessionStatus: useCallback(
@@ -46,17 +51,27 @@ export function Sessions() {
         setSessions(prev =>
           prev.map(s => (s.id === event.sessionId ? { ...s, status: event.status as Session['status'] } : s)),
         );
+        if (event.status === 'qr_ready' && qrDataRef.current?.sessionId !== event.sessionId) {
+          const name = sessionsRef.current.find(s => s.id === event.sessionId)?.name || '';
+          sessionApi
+            .getQR(event.sessionId)
+            .then(qr => setQrData({ sessionId: event.sessionId, sessionName: name, qrCode: qr.qrCode }))
+            .catch(() => {});
+        }
         if (event.status === 'ready') {
+          clearQrInterval();
           setQrData(prev => (prev?.sessionId === event.sessionId ? null : prev));
           currentSessionName.current = '';
           setError(null);
           toast.success(t('sessions.toasts.readyTitle'), t('sessions.toasts.readyDesc'));
         } else if (event.status === 'authenticating') {
           // QR scanned, authentication in progress - clear QR display
+          clearQrInterval();
           setQrData(prev => (prev?.sessionId === event.sessionId ? null : prev));
           currentSessionName.current = '';
           setError(null);
         } else if (event.status === 'disconnected' || event.status === 'failed') {
+          clearQrInterval();
           setQrData(prev => (prev?.sessionId === event.sessionId ? null : prev));
           currentSessionName.current = '';
           setError(null);
@@ -94,6 +109,26 @@ export function Sessions() {
     }
   };
 
+  // Refreshes session list without touching error state, so a background
+  // refresh can't clobber an error set by the caller that triggered it.
+  const fetchSessionsSilent = async () => {
+    try {
+      const data = await sessionApi.list();
+      setSessions(data);
+      sessionsRef.current = data;
+      return data;
+    } catch {
+      return null;
+    }
+  };
+
+  const clearQrInterval = () => {
+    if (qrRefreshInterval.current) {
+      clearInterval(qrRefreshInterval.current);
+      qrRefreshInterval.current = null;
+    }
+  };
+
   useEffect(() => {
     fetchSessions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -110,16 +145,19 @@ export function Sessions() {
 
       try {
         const qr = await sessionApi.getQR(sessionId);
-        setQrData({ sessionId, sessionName: currentSessionName.current, qrCode: qr.qrCode });
         if (qr.status === 'ready') {
+          clearQrInterval();
           setQrData(null);
           currentSessionName.current = '';
-          fetchSessions();
+          fetchSessionsSilent();
+          return;
         }
+        setQrData({ sessionId, sessionName: currentSessionName.current, qrCode: qr.qrCode });
       } catch (err) {
+        clearQrInterval();
         setQrData(null);
         currentSessionName.current = '';
-        const latestSessions = await fetchSessions();
+        const latestSessions = await fetchSessionsSilent();
         if (!isExpectedQRError(err)) {
           setError(err instanceof Error ? err.message : t('sessions.qr.unavailable'));
         } else if (latestSessions?.some(s => s.id === sessionId && s.status === 'ready')) {
@@ -181,7 +219,7 @@ export function Sessions() {
   };
 
   const handleStart = async (id: string) => {
-    const session = sessions.find(s => s.id === id);
+    const session = sessionsRef.current.find(s => s.id === id);
     if (session && QR_STATUSES.includes(session.status)) {
       handleShowQR(id);
       return;
@@ -191,13 +229,13 @@ export function Sessions() {
       setError(null);
       await sessionApi.start(id);
       setSessions(sessions.map(s => (s.id === id ? { ...s, status: 'connecting' } : s)));
-      await fetchSessions();
-      const sessionName = sessions.find(s => s.id === id)?.name || '';
+      const latestSessions = await fetchSessionsSilent();
+      const sessionName = latestSessions?.find(s => s.id === id)?.name || session?.name || '';
       currentSessionName.current = sessionName;
       setQrData({ sessionId: id, sessionName, qrCode: '' });
     } catch (err) {
       console.error('Failed to start:', err);
-      await fetchSessions();
+      await fetchSessionsSilent();
       if (err instanceof Error && err.message.includes('already started')) {
         handleShowQR(id);
       }
@@ -205,7 +243,7 @@ export function Sessions() {
   };
 
   const handleShowQR = async (id: string) => {
-    const session = sessions.find(s => s.id === id);
+    const session = sessionsRef.current.find(s => s.id === id);
     const sessionName = session?.name || '';
     try {
       setError(null);
@@ -213,7 +251,7 @@ export function Sessions() {
       setQrData({ sessionId: id, sessionName, qrCode: qr.qrCode });
     } catch (err) {
       console.error('Failed to get QR:', err);
-      const latestSessions = await fetchSessions();
+      const latestSessions = await fetchSessionsSilent();
       if (isExpectedQRError(err)) {
         const latestSession = latestSessions?.find(s => s.id === id) || sessionsRef.current.find(s => s.id === id);
         if (latestSession && QR_STATUSES.includes(latestSession.status)) {
@@ -309,16 +347,8 @@ export function Sessions() {
       </div>
 
       {error && (
-        <div
-          style={{
-            background: '#FEE2E2',
-            padding: '1rem',
-            borderRadius: '8px',
-            color: '#DC2626',
-            marginBottom: '1rem',
-          }}
-        >
-          {error}
+        <div className="error-banner">
+          <span className="error-banner-text">{error}</span>
         </div>
       )}
 
@@ -523,7 +553,11 @@ export function Sessions() {
 
               {QR_STATUSES.includes(session.status) ? (
                 <div className="qr-placeholder">
-                  <QrCode size={80} className="qr-icon" />
+                  {session.status === 'qr_ready' && qrData?.sessionId === session.id && qrData.qrCode ? (
+                    <img src={qrData.qrCode} alt="QR" className="qr-thumbnail" />
+                  ) : (
+                    <QrCode size={80} className="qr-icon" />
+                  )}
                   <p>{session.status === 'qr_ready' ? t('sessions.qr.scanToConnect') : t('sessions.qr.preparing')}</p>
                   <button
                     className="btn-sm"

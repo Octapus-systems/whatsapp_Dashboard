@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { WebhookService, WebhookPayload } from './webhook.service';
 import { Webhook } from './entities/webhook.entity';
+import { WebhookDelivery } from './entities/webhook-delivery.entity';
 import { HookManager } from '../../core/hooks';
 import { QUEUE_NAMES } from '../queue/queue-names';
 import { Session } from '../session/entities/session.entity';
@@ -32,6 +33,7 @@ function createMockWebhook(overrides: Partial<Webhook> = {}): Webhook {
 describe('WebhookService', () => {
   let service: WebhookService;
   let repository: jest.Mocked<Partial<Repository<Webhook>>>;
+  let deliveryRepository: jest.Mocked<Partial<Repository<WebhookDelivery>>>;
   let configService: jest.Mocked<Partial<ConfigService>>;
   let hookManager: jest.Mocked<Partial<HookManager>>;
   let webhookQueue: jest.Mocked<Record<string, jest.Mock>>;
@@ -44,6 +46,14 @@ describe('WebhookService', () => {
       save: jest.fn(),
       remove: jest.fn(),
       update: jest.fn(),
+    };
+
+    deliveryRepository = {
+      create: jest.fn().mockImplementation(entity => entity),
+      save: jest.fn().mockResolvedValue(undefined),
+      find: jest.fn().mockResolvedValue([]),
+      findAndCount: jest.fn().mockResolvedValue([[], 0]),
+      findOne: jest.fn(),
     };
 
     configService = {
@@ -70,6 +80,7 @@ describe('WebhookService', () => {
       providers: [
         WebhookService,
         { provide: getRepositoryToken(Webhook, 'data'), useValue: repository },
+        { provide: getRepositoryToken(WebhookDelivery, 'data'), useValue: deliveryRepository },
         { provide: ConfigService, useValue: configService },
         { provide: HookManager, useValue: hookManager },
         { provide: getQueueToken(QUEUE_NAMES.WEBHOOK), useValue: webhookQueue },
@@ -350,6 +361,7 @@ describe('WebhookService', () => {
         providers: [
           WebhookService,
           { provide: getRepositoryToken(Webhook, 'data'), useValue: repository },
+          { provide: getRepositoryToken(WebhookDelivery, 'data'), useValue: deliveryRepository },
           {
             provide: ConfigService,
             useValue: {

@@ -38,6 +38,33 @@ export interface SessionStats {
   memoryUsage: { heapUsed: number; heapTotal: number; rss: number };
 }
 
+export interface MessageTimeSeriesPoint {
+  timestamp: string;
+  sent: number;
+  received: number;
+}
+
+export interface MessageStatsResponse {
+  timeSeries: MessageTimeSeriesPoint[];
+  byType: Record<string, number>;
+  bySession: Array<{ sessionId: string; name: string; sent: number; received: number }>;
+  topChats: Array<{ chatId: string; messageCount: number }>;
+}
+
+export interface SessionUptimeEntry {
+  id: string;
+  name: string;
+  status: string;
+  connectedAt: string | null;
+  lastActiveAt: string | null;
+  uptimeMs: number | null;
+}
+
+export interface SessionsUptimeSummary {
+  sessions: SessionUptimeEntry[];
+  statusDistribution: Record<string, number>;
+}
+
 export interface Webhook {
   id: string;
   sessionId: string;
@@ -47,6 +74,29 @@ export interface Webhook {
   secret?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  webhookId: string;
+  deliveryId: string;
+  event: string;
+  statusCode: number | null;
+  success: boolean;
+  attempt: number;
+  durationMs: number | null;
+  requestPayload: Record<string, unknown> | null;
+  requestHeaders: Record<string, string> | null;
+  responsePayload: unknown;
+  error: string | null;
+  createdAt: string;
+}
+
+export interface WebhookDeliveriesResponse {
+  items: WebhookDelivery[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 export interface ApiKey {
@@ -92,6 +142,34 @@ export interface Contact {
   number: string;
   isMyContact: boolean;
   isBlocked: boolean;
+  /** Populated client-side from live WS message events, not returned by the API */
+  lastMessage?: string;
+  /** Populated client-side from live WS message events, not returned by the API */
+  lastMessageTime?: string;
+  /** Populated client-side from live WS message events, not returned by the API */
+  unread?: boolean;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ContactTagAssignment {
+  id?: string;
+  sessionId: string;
+  jid: string;
+  name?: string | null;
+  tags: string[];
+  /** Operator (API key name) who has claimed this chat, if any. */
+  assignedTo?: string | null;
+  /** When the chat was claimed. */
+  assignedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Group {
@@ -99,6 +177,20 @@ export interface Group {
   name: string;
   participantsCount?: number;
   isAdmin?: boolean;
+  /** Populated client-side from live WS message events, not returned by the API */
+  lastMessage?: string;
+  /** Populated client-side from live WS message events, not returned by the API */
+  lastMessageTime?: string;
+  /** Populated client-side from live WS message events, not returned by the API */
+  unread?: boolean;
+}
+
+export interface MessageTemplate {
+  id: string;
+  name: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Message {
@@ -258,7 +350,7 @@ export const authApi = {
    * the dashboard is hosted as a separate static site (e.g. on Render).
    */
   validate: (apiKey: string) =>
-    request<{ valid: boolean; role?: string }>('/auth/validate', {
+    request<{ valid: boolean; role?: string; name?: string }>('/auth/validate', {
       method: 'POST',
       headers: { 'X-API-Key': apiKey },
     }),
@@ -285,6 +377,16 @@ export const sessionApi = {
 };
 
 // =============================================================================
+// Stats/Analytics API
+// =============================================================================
+
+export const statsApi = {
+  getMessageStats: (period: '24h' | '7d' | '14d' | '30d') =>
+    request<MessageStatsResponse>(`/stats/messages?period=${period}`),
+  getSessionsUptime: () => request<SessionsUptimeSummary>('/stats/sessions-uptime'),
+};
+
+// =============================================================================
 // Webhook API
 // =============================================================================
 
@@ -308,6 +410,12 @@ export const webhookApi = {
     request<{ success: boolean; statusCode?: number; error?: string }>(`/sessions/${sessionId}/webhooks/${id}/test`, {
       method: 'POST',
     }),
+  getDeliveries: (sessionId: string, id: string, page = 1, limit = 20) =>
+    request<WebhookDeliveriesResponse>(
+      `/sessions/${sessionId}/webhooks/${id}/deliveries?page=${page}&limit=${limit}`,
+    ),
+  getDelivery: (sessionId: string, id: string, deliveryId: string) =>
+    request<WebhookDelivery>(`/sessions/${sessionId}/webhooks/${id}/deliveries/${deliveryId}`),
 };
 
 // =============================================================================
@@ -386,6 +494,109 @@ export const messageApi = {
 };
 
 // =============================================================================
+// Broadcast API
+// =============================================================================
+
+export type BroadcastStatus = 'pending' | 'scheduled' | 'processing' | 'completed' | 'cancelled' | 'failed';
+
+export interface BroadcastProgress {
+  total: number;
+  sent: number;
+  failed: number;
+  pending: number;
+  cancelled: number;
+}
+
+export interface BroadcastRecipientResult {
+  chatId: string;
+  status: 'pending' | 'sent' | 'failed' | 'cancelled';
+  messageId?: string;
+  error?: string;
+  sentAt?: string;
+}
+
+export interface BroadcastSummary {
+  broadcastId: string;
+  status: BroadcastStatus;
+  message: string;
+  totalRecipients: number;
+  scheduledAt: string | null;
+  progress: BroadcastProgress;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+}
+
+export interface BroadcastDetail {
+  broadcastId: string;
+  status: BroadcastStatus;
+  message: string;
+  recipients: string[];
+  scheduledAt: string | null;
+  progress: BroadcastProgress;
+  results: BroadcastRecipientResult[];
+  startedAt: string | null;
+  completedAt: string | null;
+}
+
+export interface CreateBroadcastPayload {
+  message: string;
+  recipients?: string[];
+  allContacts?: boolean;
+  scheduledAt?: string;
+  options?: {
+    delayBetweenMessages?: number;
+    randomizeDelay?: boolean;
+    stopOnError?: boolean;
+  };
+}
+
+export interface CreateBroadcastResponse {
+  broadcastId: string;
+  status: BroadcastStatus;
+  totalRecipients: number;
+  scheduledAt?: string;
+  estimatedCompletionTime?: string;
+  statusUrl: string;
+}
+
+export const broadcastApi = {
+  create: (sessionId: string, payload: CreateBroadcastPayload) =>
+    request<CreateBroadcastResponse>(`/sessions/${sessionId}/broadcasts`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  list: (sessionId: string) => request<BroadcastSummary[]>(`/sessions/${sessionId}/broadcasts`),
+  getStatus: (sessionId: string, broadcastId: string) =>
+    request<BroadcastDetail>(`/sessions/${sessionId}/broadcasts/${broadcastId}`),
+  cancel: (sessionId: string, broadcastId: string) =>
+    request<{ broadcastId: string; status: BroadcastStatus; progress: BroadcastProgress }>(
+      `/sessions/${sessionId}/broadcasts/${broadcastId}/cancel`,
+      { method: 'POST' },
+    ),
+};
+
+// =============================================================================
+// Message Template API
+// =============================================================================
+
+export const templateApi = {
+  list: () => request<MessageTemplate[]>('/templates'),
+  get: (id: string) => request<MessageTemplate>(`/templates/${id}`),
+  create: (data: { name: string; content: string }) =>
+    request<MessageTemplate>('/templates', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Partial<Pick<MessageTemplate, 'name' | 'content'>>) =>
+    request<MessageTemplate>(`/templates/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) => request<void>(`/templates/${id}`, { method: 'DELETE' }),
+};
+
+// =============================================================================
 // Chat API
 // =============================================================================
 
@@ -396,6 +607,60 @@ export const chatApi = {
     request<{ messages: Message[]; total: number }>(
       `/sessions/${sessionId}/messages?chatId=${chatId}&limit=${limit}&offset=${offset}`,
     ),
+};
+
+// =============================================================================
+// Tag / Contact Tagging API
+// =============================================================================
+
+export const tagApi = {
+  list: () => request<Tag[]>('/tags'),
+  get: (id: string) => request<Tag>(`/tags/${id}`),
+  create: (data: { name: string; color?: string }) =>
+    request<Tag>('/tags', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: { name?: string; color?: string }) =>
+    request<Tag>(`/tags/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) => request<void>(`/tags/${id}`, { method: 'DELETE' }),
+};
+
+export const contactTagApi = {
+  listBySession: (sessionId: string, tag?: string) =>
+    request<ContactTagAssignment[]>(`/sessions/${sessionId}/contact-tags${tag ? `?tag=${encodeURIComponent(tag)}` : ''}`),
+  get: (sessionId: string, jid: string) =>
+    request<ContactTagAssignment>(`/sessions/${sessionId}/contact-tags/${encodeURIComponent(jid)}`),
+  setTags: (sessionId: string, jid: string, tags: string[], name?: string) =>
+    request<ContactTagAssignment>(`/sessions/${sessionId}/contact-tags/${encodeURIComponent(jid)}`, {
+      method: 'PUT',
+      body: JSON.stringify({ tags, name }),
+    }),
+  addTag: (sessionId: string, jid: string, tag: string, name?: string) =>
+    request<ContactTagAssignment>(`/sessions/${sessionId}/contact-tags/${encodeURIComponent(jid)}/tags`, {
+      method: 'POST',
+      body: JSON.stringify({ tag, name }),
+    }),
+  removeTag: (sessionId: string, jid: string, tag: string) =>
+    request<ContactTagAssignment>(
+      `/sessions/${sessionId}/contact-tags/${encodeURIComponent(jid)}/tags/${encodeURIComponent(tag)}`,
+      { method: 'DELETE' },
+    ),
+  delete: (sessionId: string, jid: string) =>
+    request<void>(`/sessions/${sessionId}/contact-tags/${encodeURIComponent(jid)}`, { method: 'DELETE' }),
+  /** Claim (assign) a chat to the current operator (identified server-side by API key). */
+  claim: (sessionId: string, jid: string) =>
+    request<ContactTagAssignment>(`/sessions/${sessionId}/contact-tags/${encodeURIComponent(jid)}/claim`, {
+      method: 'POST',
+    }),
+  /** Release the current claim on a chat. */
+  unassign: (sessionId: string, jid: string) =>
+    request<ContactTagAssignment>(`/sessions/${sessionId}/contact-tags/${encodeURIComponent(jid)}/claim`, {
+      method: 'DELETE',
+    }),
 };
 
 // =============================================================================

@@ -3,4 +3,5 @@
 export const QUEUE_NAMES = {
   MESSAGE: 'message-queue',
   WEBHOOK: 'webhook-queue',
+  BROADCAST: 'broadcast-queue',
 } as const;

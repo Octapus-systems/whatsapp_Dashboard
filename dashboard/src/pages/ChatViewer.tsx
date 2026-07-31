@@ -14,18 +14,35 @@ import {
   Image as ImageIcon, 
   Video, 
   FileText, 
-  Mic, 
-  MapPin, 
-  Contact as ContactIcon, 
-  Smile, 
-  ArrowDown
+  Mic,
+  MapPin,
+  Contact as ContactIcon,
+  ArrowDown,
+  WifiOff,
+  MessageSquareText,
+  UserCheck,
+  UserX
 } from 'lucide-react';
-import { chatApi, sessionApi, messageApi, type Session, type Contact, type Group, type Message } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import {
+  chatApi,
+  sessionApi,
+  messageApi,
+  authApi,
+  contactTagApi,
+  type Session,
+  type Contact,
+  type Group,
+  type Message,
+  type ContactTagAssignment,
+} from '../services/api';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useRole } from '../hooks/useRole';
+import { useTemplatesQuery } from '../hooks/queries';
 import { PageHeader } from '../components/PageHeader';
 import './ChatViewer.css';
+import './Templates.css';
 
 interface CombinedChat {
   id: string;
@@ -63,6 +80,7 @@ export function ChatViewer() {
   const { t } = useTranslation();
   useDocumentTitle(t('chatViewer.title', 'Chat Viewer'));
   const { canWrite } = useRole();
+  const navigate = useNavigate();
 
   // State
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -79,12 +97,37 @@ export function ChatViewer() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const { data: templates = [] } = useTemplatesQuery();
 
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+
+  // Chat assignment/claim state — keyed by contact/group jid for the currently loaded session.
+  const [assignments, setAssignments] = useState<Record<string, ContactTagAssignment>>({});
+  const [assignmentBusyId, setAssignmentBusyId] = useState<string | null>(null);
+  // Identifies "me" for claim/unassign comparisons. There is no separate per-user
+  // login system in this app — the API key's `name` (label) doubles as operator identity.
+  const [currentOperatorName, setCurrentOperatorName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const key = sessionStorage.getItem('wirebot_api_key');
+    if (!key) return;
+    authApi
+      .validate(key)
+      .then(data => {
+        if (data.valid && data.name) {
+          setCurrentOperatorName(data.name);
+        }
+      })
+      .catch(() => {
+        // Non-fatal — claim ownership just won't be distinguishable client-side
+      });
+  }, []);
 
   // Refs for scrolling
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const templatePickerRef = useRef<HTMLDivElement>(null);
 
   // Always-fresh refs used inside WebSocket callbacks to avoid stale closures
   const activeChatRef = useRef<CombinedChat | null>(null);
@@ -138,11 +181,17 @@ export function ChatViewer() {
       setGroups([]);
       setActiveChat(null);
       setMessages([]);
+      setAssignments({});
 
-      const [contactsData, groupsData] = await Promise.all([
+      const [contactsData, groupsData, assignmentsData] = await Promise.all([
         chatApi.getContacts(sessionId).catch(() => [] as Contact[]),
-        chatApi.getGroups(sessionId).catch(() => [] as Group[])
+        chatApi.getGroups(sessionId).catch(() => [] as Group[]),
+        contactTagApi.listBySession(sessionId).catch(() => [] as ContactTagAssignment[]),
       ]);
+
+      setAssignments(
+        Object.fromEntries(assignmentsData.filter(a => a.assignedTo).map(a => [a.jid, a])),
+      );
 
       // Deduplicate by id as a safety net (backend also deduplicates, belt-and-braces)
       const uniqueContacts = Array.from(
@@ -172,24 +221,36 @@ export function ChatViewer() {
     }
   }, [selectedSessionId, isSessionReady]);
 
-  // Fetch message history for selected chat
-  const fetchMessages = async (chatId: string) => {
-    if (!selectedSessionId || !chatId) return;
+  // Fetch message history for selected chat.
+  // Captures the requested chat/session in closure and re-checks the refs
+  // once the request resolves, so a slow fetch for a chat/session the user
+  // has since navigated away from can never overwrite newer state.
+  const fetchMessages = async (chatId: string, sessionId: string) => {
+    if (!sessionId || !chatId) return;
     try {
       setLoadingMessages(true);
-      const result = await chatApi.getMessages(selectedSessionId, chatId, 100);
+      const result = await chatApi.getMessages(sessionId, chatId, 100);
+      if (activeChatRef.current?.id !== chatId || selectedSessionIdRef.current !== sessionId) {
+        // Stale response — the user switched chat/session while this was in flight
+        return;
+      }
       // API returns DESC (newest first) — reverse to ASC for correct top→bottom display
       setMessages([...result.messages].reverse());
     } catch (err) {
       console.error('Failed to fetch messages:', err);
     } finally {
-      setLoadingMessages(false);
+      if (activeChatRef.current?.id === chatId && selectedSessionIdRef.current === sessionId) {
+        setLoadingMessages(false);
+      }
     }
   };
 
   useEffect(() => {
+    // Clear synchronously before kicking off the fetch so a slow previous
+    // fetch can never render its result under the new chat/session header.
+    setMessages([]);
     if (activeChat) {
-      fetchMessages(activeChat.id);
+      fetchMessages(activeChat.id, selectedSessionId);
     }
   }, [activeChat?.id, selectedSessionId]);
 
@@ -204,6 +265,23 @@ export function ChatViewer() {
     }
   }, [messages.length]);
 
+  // Close the template picker popover when clicking outside of it
+  useEffect(() => {
+    if (!showTemplatePicker) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (templatePickerRef.current && !templatePickerRef.current.contains(event.target as Node)) {
+        setShowTemplatePicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTemplatePicker]);
+
+  const insertTemplate = (content: string) => {
+    setReplyText(prev => (prev ? `${prev} ${content}` : content));
+    setShowTemplatePicker(false);
+  };
+
   // Handle scroll detection for the "scroll to bottom" button
   const handleMessagesScroll = () => {
     if (!messagesContainerRef.current) return;
@@ -214,7 +292,7 @@ export function ChatViewer() {
   };
 
   // WebSocket Integration — handlers read state through refs to avoid stale closures
-  useWebSocket({
+  const { isConnected: wsConnected } = useWebSocket({
     onSessionStatus: (event) => {
       setSessions(prev =>
         prev.map(s => (s.id === event.sessionId ? { ...s, status: event.status as Session['status'] } : s))
@@ -299,6 +377,18 @@ export function ChatViewer() {
         createdAt: new Date((msg.timestamp || Date.now() / 1000) * 1000).toISOString(),
       };
 
+      // The open chat's id might be in either form (resolved @c.us, or still
+      // @lid if the sidebar contact entry itself hasn't been resolved yet).
+      // Match against whichever form actually equals the active chat's id so
+      // an unresolved @lid on cold start never silently drops the message.
+      const activeChatMatchesLid = currentChat?.id === originalFrom;
+      const activeChatMatchesResolved = currentChat?.id === incomingChatId;
+      const matchedChatId = activeChatMatchesResolved
+        ? incomingChatId
+        : activeChatMatchesLid
+          ? originalFrom
+          : null;
+
       // Add to message list only if this chat is currently open
       setMessages(prev => {
         // Dedup: skip if same WA message ID already in the list
@@ -308,20 +398,30 @@ export function ChatViewer() {
           return prev;
         }
 
-        if (currentChat && incomingChatId === currentChat.id) {
-          console.log('[ChatViewer] ✅ Appending', direction, 'message to chat thread');
-          return [...prev, newMsg];
+        if (matchedChatId) {
+          console.log('[ChatViewer] ✅ Appending', direction, 'message to chat thread (matched via', matchedChatId === originalFrom ? 'raw @lid' : 'resolved id', ')');
+          // Store under the id form that matches the open thread so it renders immediately
+          return [...prev, { ...newMsg, chatId: matchedChatId }];
         }
 
         console.log('[ChatViewer] Message not for active chat:', incomingChatId, '!= currentChat:', currentChat?.id);
         return prev;
       });
 
-      // Update sidebar last-message snippet for contacts (use resolved chatId)
+      // Update sidebar last-message snippet/time for contacts & groups — match
+      // on whichever id form (resolved or raw @lid) the sidebar entry uses, so
+      // an unresolved @lid contact still gets its snippet updated instead of
+      // silently losing the update. Mark unread unless this chat is the one
+      // currently open.
       if (!msg.fromMe) {
-        setContacts(prev => prev.map(c =>
-          c.id === incomingChatId ? { ...c, lastMessage: newMsg.body } : c
-        ));
+        const lastMessageTime = newMsg.createdAt;
+        const isOpen = matchedChatId !== null;
+        const updateEntry = <T extends { id: string }>(entry: T) =>
+          (entry.id === incomingChatId || entry.id === originalFrom)
+            ? { ...entry, lastMessage: newMsg.body, lastMessageTime, unread: !isOpen }
+            : entry;
+        setContacts(prev => prev.map(updateEntry));
+        setGroups(prev => prev.map(updateEntry));
       }
     },
   }, selectedSessionId);
@@ -383,12 +483,18 @@ export function ChatViewer() {
       id: c.id,
       name: c.name || c.pushName || c.number || c.id.split('@')[0],
       type: 'personal' as const,
-      number: c.number
+      number: c.number,
+      lastMessage: c.lastMessage,
+      lastMessageTime: c.lastMessageTime,
+      unread: c.unread
     })),
     ...groups.map(g => ({
       id: g.id,
       name: g.name || g.id.split('@')[0],
-      type: 'group' as const
+      type: 'group' as const,
+      lastMessage: g.lastMessage,
+      lastMessageTime: g.lastMessageTime,
+      unread: g.unread
     }))
   ];
 
@@ -526,6 +632,56 @@ export function ChatViewer() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Helper to format a chat list row's last-message time as a short relative string
+  const formatRelativeTime = (isoTimestamp: string) => {
+    const diffMs = Date.now() - new Date(isoTimestamp).getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return t('common.justNow', 'Just now');
+    if (diffMin < 60) return t('common.minAgo', '{{count}} min ago', { count: diffMin });
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return t('common.hoursAgo', '{{count}} hours ago', { count: diffHours });
+    return new Date(isoTimestamp).toLocaleDateString();
+  };
+
+  // Select a chat and clear its unread flag in the sidebar
+  const handleSelectChat = (chat: CombinedChat) => {
+    setActiveChat(chat);
+    setContacts(prev => prev.map(c => (c.id === chat.id ? { ...c, unread: false } : c)));
+    setGroups(prev => prev.map(g => (g.id === chat.id ? { ...g, unread: false } : g)));
+  };
+
+  // Claim a chat for the current operator, so other operators see it's being handled.
+  const handleClaimChat = async (jid: string) => {
+    if (!selectedSessionId || assignmentBusyId) return;
+    setAssignmentBusyId(jid);
+    try {
+      const record = await contactTagApi.claim(selectedSessionId, jid);
+      setAssignments(prev => ({ ...prev, [jid]: record }));
+    } catch (err) {
+      console.error('Failed to claim chat:', err);
+    } finally {
+      setAssignmentBusyId(null);
+    }
+  };
+
+  // Release the current operator's claim on a chat.
+  const handleUnassignChat = async (jid: string) => {
+    if (!selectedSessionId || assignmentBusyId) return;
+    setAssignmentBusyId(jid);
+    try {
+      await contactTagApi.unassign(selectedSessionId, jid);
+      setAssignments(prev => {
+        const next = { ...prev };
+        delete next[jid];
+        return next;
+      });
+    } catch (err) {
+      console.error('Failed to unassign chat:', err);
+    } finally {
+      setAssignmentBusyId(null);
+    }
+  };
+
   // Render checkmark ticks based on message status
   const renderMessageStatus = (status: Message['status']) => {
     switch (status) {
@@ -550,6 +706,13 @@ export function ChatViewer() {
         title={t('chatViewer.title', 'Chats & History')}
         subtitle={t('chatViewer.subtitle', 'View conversations and reply in real-time')}
       />
+
+      {!wsConnected && (
+        <div className="ws-disconnected-banner">
+          <WifiOff size={16} />
+          <span>{t('chatViewer.realtimeDisconnected', 'Real-time updates are disconnected — messages may be delayed. Reconnecting...')}</span>
+        </div>
+      )}
 
       {/* Top Session Bar */}
       <div className="session-selection-bar">
@@ -579,6 +742,9 @@ export function ChatViewer() {
           <MessageSquare size={48} className="muted-icon" />
           <h3>{t('chatViewer.sessionNotReadyTitle', 'Session Offline')}</h3>
           <p>{t('chatViewer.sessionNotReadyDesc', 'The selected session is not active. Please start the session on the Sessions page first.')}</p>
+          <button type="button" className="btn-primary session-offline-cta" onClick={() => navigate('/sessions')}>
+            {t('chatViewer.goToSessions', 'Go to Sessions')}
+          </button>
         </div>
       ) : (
         <div className="chat-interface-container">
@@ -608,18 +774,35 @@ export function ChatViewer() {
               ) : (
                 filteredChats.map((chat, index) => {
                   const isActive = activeChat?.id === chat.id;
+                  const assignment = assignments[chat.id];
+                  const assignedTo = assignment?.assignedTo || null;
+                  const isMine = !!assignedTo && assignedTo === currentOperatorName;
                   return (
                     <button
                       key={`${chat.id}-${index}`}
                       className={`chat-item-btn ${isActive ? 'active' : ''}`}
-                      onClick={() => setActiveChat(chat)}
+                      onClick={() => handleSelectChat(chat)}
                     >
                       <div className={`chat-icon-avatar ${chat.type}`}>
                         {chat.type === 'group' ? <Users size={18} /> : <User size={18} />}
                       </div>
                       <div className="chat-item-info">
-                        <span className="chat-item-name">{chat.name}</span>
-                        <span className="chat-item-jid">{chat.id}</span>
+                        <span className="chat-item-name-row">
+                          <span className="chat-item-name">{chat.name}</span>
+                          {chat.lastMessageTime && (
+                            <span className="chat-item-time">{formatRelativeTime(chat.lastMessageTime)}</span>
+                          )}
+                        </span>
+                        <span className="chat-item-preview-row">
+                          <span className="chat-item-preview">{chat.lastMessage || chat.id}</span>
+                          {chat.unread && <span className="chat-item-unread-badge" />}
+                        </span>
+                        {assignedTo && (
+                          <span className={`chat-item-assignee ${isMine ? 'mine' : ''}`}>
+                            <UserCheck size={11} />
+                            {t('chatViewer.assignedTo', 'Claimed by {{name}}', { name: assignedTo })}
+                          </span>
+                        )}
                       </div>
                     </button>
                   );
@@ -641,6 +824,48 @@ export function ChatViewer() {
                     <h3>{activeChat.name}</h3>
                     <span>{activeChat.id}</span>
                   </div>
+                  {canWrite && (() => {
+                    const assignment = assignments[activeChat.id];
+                    const assignedTo = assignment?.assignedTo || null;
+                    const isMine = !!assignedTo && assignedTo === currentOperatorName;
+                    const busy = assignmentBusyId === activeChat.id;
+                    if (!assignedTo) {
+                      return (
+                        <button
+                          type="button"
+                          className="btn-secondary claim-chat-btn"
+                          disabled={busy}
+                          onClick={() => handleClaimChat(activeChat.id)}
+                          title={t('chatViewer.claimChat', 'Claim this chat')}
+                        >
+                          {busy ? <Loader2 className="animate-spin" size={16} /> : <UserCheck size={16} />}
+                          {t('chatViewer.claim', 'Claim')}
+                        </button>
+                      );
+                    }
+                    return (
+                      <div className="chat-assignment-status">
+                        <span className={`chat-assignee-label ${isMine ? 'mine' : ''}`}>
+                          <UserCheck size={14} />
+                          {isMine
+                            ? t('chatViewer.assignedToMe', 'Claimed by you')
+                            : t('chatViewer.assignedTo', 'Claimed by {{name}}', { name: assignedTo })}
+                        </span>
+                        {isMine && (
+                          <button
+                            type="button"
+                            className="btn-secondary unassign-chat-btn"
+                            disabled={busy}
+                            onClick={() => handleUnassignChat(activeChat.id)}
+                            title={t('chatViewer.unassignChat', 'Release this claim')}
+                          >
+                            {busy ? <Loader2 className="animate-spin" size={16} /> : <UserX size={16} />}
+                            {t('chatViewer.unassign', 'Unassign')}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Message list area */}
@@ -703,16 +928,48 @@ export function ChatViewer() {
 
                 {/* Reply section */}
                 <form className="thread-reply-bar" onSubmit={handleSendMessage}>
-                  <button type="button" className="btn-icon emoji-picker-stub" title={t('chatViewer.addEmoji', 'Add Emoji')}>
-                    <Smile size={20} />
-                  </button>
+                  <div className="template-picker-wrapper" ref={templatePickerRef}>
+                    <button
+                      type="button"
+                      className="btn-icon"
+                      disabled={!canWrite}
+                      title={t('chatViewer.insertTemplate', 'Insert template')}
+                      onClick={() => setShowTemplatePicker(prev => !prev)}
+                    >
+                      <MessageSquareText size={20} />
+                    </button>
+                    {showTemplatePicker && (
+                      <div className="template-picker-popover">
+                        <div className="template-picker-header">
+                          {t('chatViewer.templatesHeader', 'Message templates')}
+                        </div>
+                        {templates.length === 0 ? (
+                          <div className="template-picker-empty">
+                            {t('chatViewer.noTemplates', 'No templates yet. Create one on the Templates page.')}
+                          </div>
+                        ) : (
+                          templates.map(template => (
+                            <button
+                              key={template.id}
+                              type="button"
+                              className="template-picker-item"
+                              onClick={() => insertTemplate(template.content)}
+                            >
+                              <span className="template-picker-name">{template.name}</span>
+                              <span className="template-picker-content">{template.content}</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <input
                     type="text"
                     value={replyText}
                     onChange={e => setReplyText(e.target.value)}
                     placeholder={
-                      canWrite 
-                        ? t('chatViewer.replyPlaceholder', 'Type a reply...') 
+                      canWrite
+                        ? t('chatViewer.replyPlaceholder', 'Type a reply...')
                         : t('chatViewer.viewOnlyPlaceholder', 'You are in view-only mode')
                     }
                     disabled={!canWrite || sendingMessage}

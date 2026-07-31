@@ -48,6 +48,9 @@ const SOCKET_URL = getSocketUrl();
 export function useWebSocket(events: WebSocketEvents = {}, sessionId?: string) {
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  // Surfaced to consumers so the UI can show a "real-time updates unavailable"
+  // indicator instead of silently having no live updates.
+  const [connectError, setConnectError] = useState<string | null>(null);
   const subSessionId = sessionId || '*';
 
   // ─── Stable callback refs ────────────────────────────────────────────────
@@ -66,6 +69,7 @@ export function useWebSocket(events: WebSocketEvents = {}, sessionId?: string) {
     const apiKey = sessionStorage.getItem('wirebot_api_key');
     if (!apiKey) {
       console.warn('[WebSocket] No API key found — skipping connection');
+      setConnectError('missing-api-key');
       return;
     }
 
@@ -86,6 +90,7 @@ export function useWebSocket(events: WebSocketEvents = {}, sessionId?: string) {
     socket.on('connect', () => {
       console.log('[WebSocket] ✅ Connected — socket id:', socket.id);
       setIsConnected(true);
+      setConnectError(null);
     });
 
     socket.on('disconnect', (reason) => {
@@ -95,6 +100,7 @@ export function useWebSocket(events: WebSocketEvents = {}, sessionId?: string) {
 
     socket.on('connect_error', (error) => {
       console.warn('[WebSocket] Connection error:', error.message);
+      setConnectError(error.message);
     });
 
     // ── SINGLE stable 'message' listener ─────────────────────────────────
@@ -165,12 +171,14 @@ export function useWebSocket(events: WebSocketEvents = {}, sessionId?: string) {
     });
 
     return () => {
-      if (socket.connected) {
-        console.log(`[WebSocket] Unsubscribing → session=${subSessionId}`);
-        socket.emit('message', { type: 'unsubscribe', sessionId: subSessionId });
-      }
+      // Always attempt the unsubscribe, even if the socket is mid-reconnect
+      // (connected === false but not yet destroyed). Gating on `.connected`
+      // let a stale server-side subscription survive a reconnect, leaking
+      // events for the old session into whatever chat/session is selected next.
+      console.log(`[WebSocket] Unsubscribing → session=${subSessionId}`);
+      socket.emit('message', { type: 'unsubscribe', sessionId: subSessionId });
     };
   }, [isConnected, subSessionId]);
 
-  return { isConnected };
+  return { isConnected, connectError };
 }

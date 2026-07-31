@@ -20,6 +20,9 @@ import {
   ChevronRight,
   Languages,
   MessageSquare,
+  MessageSquareText,
+  Megaphone,
+  Tags as TagsIcon,
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { type UserRole } from '../hooks/useRole';
@@ -36,6 +39,9 @@ const allNavItems = [
   { to: '/sessions', icon: Smartphone, key: 'sessions' as const, adminOnly: false },
   { to: '/chats', icon: MessageSquare, key: 'chatViewer' as const, adminOnly: false },
   { to: '/webhooks', icon: Webhook, key: 'webhooks' as const, adminOnly: false },
+  { to: '/templates', icon: MessageSquareText, key: 'templates' as const, adminOnly: false },
+  { to: '/broadcast', icon: Megaphone, key: 'broadcast' as const, adminOnly: false },
+  { to: '/tags', icon: TagsIcon, key: 'tags' as const, adminOnly: false },
   { to: '/api-keys', icon: Key, key: 'apiKeys' as const, adminOnly: true },
   { to: '/message-tester', icon: Send, key: 'messageTester' as const, adminOnly: false },
   { to: '/infrastructure', icon: Server, key: 'infrastructure' as const, adminOnly: false },
@@ -82,12 +88,7 @@ export function Layout({ onLogout, userRole }: LayoutProps) {
   const toggleMobile = () => setIsMobileOpen(!isMobileOpen);
 
   const currentLang = (i18n.resolvedLanguage || i18n.language || 'en').split('-')[0] as SupportedLanguage;
-  const cycleLanguage = () => {
-    const idx = supportedLanguages.indexOf(currentLang);
-    const next = supportedLanguages[(idx + 1) % supportedLanguages.length];
-    void i18n.changeLanguage(next);
-  };
-  const languageLabel = currentLang === 'he' ? 'עברית' : 'EN';
+  const languageNames: Record<SupportedLanguage, string> = { en: 'English', he: 'עברית' };
   const isRtl = currentLang === 'he';
 
   return (
@@ -153,15 +154,26 @@ export function Layout({ onLogout, userRole }: LayoutProps) {
         </nav>
 
         <div className="sidebar-footer">
-          <button
-            className="theme-toggle-btn"
-            onClick={cycleLanguage}
+          <label
+            className="theme-toggle-btn language-select"
             title={t('common.language')}
             aria-label={t('common.language')}
           >
             <Languages size={18} />
-            {!isCollapsed && <span>{languageLabel}</span>}
-          </button>
+            {!isCollapsed && (
+              <select
+                value={currentLang}
+                onChange={e => void i18n.changeLanguage(e.target.value)}
+                aria-label={t('common.language')}
+              >
+                {supportedLanguages.map(lang => (
+                  <option key={lang} value={lang}>
+                    {languageNames[lang]}
+                  </option>
+                ))}
+              </select>
+            )}
+          </label>
           <button
             className="theme-toggle-btn"
             onClick={toggleTheme}

@@ -1,0 +1,244 @@
+.templates-page {
+  padding: 2rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.templates-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.templates-table-container {
+  background: var(--bg-white);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  width: 100%;
+  overflow-x: auto;
+}
+
+.templates-table {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 600px;
+  font-size: 0.875rem;
+}
+
+.templates-table .table-row {
+  display: grid;
+  grid-template-columns: 200px 1fr 100px;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.templates-table .table-row:last-child {
+  border-bottom: none;
+}
+
+.templates-table .table-row.header {
+  background: var(--bg-light);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+
+.templates-table .table-row:not(.header):hover {
+  background: rgba(37, 211, 102, 0.05);
+}
+
+.templates-table .table-row:not(.header):nth-child(even) {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.templates-table .name-cell {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.templates-table .content-cell {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.templates-table .actions-cell {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+.empty-table-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-table-state svg {
+  margin-bottom: 1rem;
+  opacity: 0.4;
+  color: var(--text-muted);
+}
+
+.empty-table-state h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem;
+}
+
+.empty-table-state p {
+  margin: 0;
+  font-size: 0.875rem;
+  max-width: 300px;
+}
+
+/* Template picker popover used inside ChatViewer's reply bar */
+.template-picker-wrapper {
+  position: relative;
+}
+
+.template-picker-popover {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  width: 320px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+}
+
+.template-picker-header {
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+.template-picker-empty {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.template-picker-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.625rem 1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.template-picker-item:last-child {
+  border-bottom: none;
+}
+
+.template-picker-item:hover {
+  background: var(--bg-light);
+}
+
+.template-picker-item .template-picker-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.template-picker-item .template-picker-content {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 0.125rem;
+}
+
+/* Toast Notification (mirrors Webhooks.css) */
+.toast {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
+.toast.success {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #047857;
+}
+
+.toast.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  opacity: 0.6;
+  color: inherit;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
+
+.icon-btn {
+  padding: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover {
+  background: var(--bg-light);
+  color: var(--text-primary);
+}
+
+.icon-btn.danger:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.modal.modal-sm {
+  max-width: 400px;
+}

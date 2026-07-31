@@ -60,9 +60,12 @@
     "webhooks": "Webhooks",
     "apiKeys": "API Keys",
     "messageTester": "Message Tester",
+    "broadcast": "Broadcast",
     "infrastructure": "Infrastructure",
     "plugins": "Plugins",
-    "logs": "Logs"
+    "logs": "Logs",
+    "tags": "Tags",
+    "templates": "Templates"
   },
   "errorBoundary": {
     "title": "Something went wrong",
@@ -104,7 +107,20 @@
     "view": "View",
     "disconnect": "Disconnect",
     "errorPrefix": "Error: {{message}}",
-    "loadError": "Failed to load data"
+    "loadError": "Failed to load data",
+    "analytics": {
+      "messageVolume": "Message Volume",
+      "sessionStatus": "Session Status & Uptime",
+      "sessionStatusSubtitle": "Current status distribution",
+      "sent": "Sent",
+      "received": "Received",
+      "noMessageData": "No message activity in this period yet.",
+      "noSessionData": "No session data available yet.",
+      "period": {
+        "14d": "14 days",
+        "30d": "30 days"
+      }
+    }
   },
   "sessionStatus": {
     "created": "New",
@@ -228,7 +244,9 @@
       "updateFailed": "Failed to update webhook: {{message}}",
       "testOk": "Webhook test successful! Status: {{status}}",
       "testFailed": "Webhook test failed: {{message}}",
-      "testError": "Failed to test webhook: {{message}}"
+      "testError": "Failed to test webhook: {{message}}",
+      "testTimeout": "The webhook did not respond in time",
+      "testCancelled": "Webhook test cancelled"
     },
     "actions": {
       "test": "Test",
@@ -242,6 +260,24 @@
       "session.disconnected": "When a session disconnects",
       "session.qr": "When QR code is generated",
       "all": "All events"
+    },
+    "history": {
+      "title": "Delivery History",
+      "empty": "No delivery attempts yet",
+      "success": "Success",
+      "failed": "Failed",
+      "noResponse": "No response",
+      "request": "Request Payload",
+      "requestHeaders": "Request Headers",
+      "response": "Response",
+      "loadDetailFailed": "Failed to load delivery details: {{message}}",
+      "columns": {
+        "status": "Status",
+        "event": "Event",
+        "responseCode": "Response Code",
+        "duration": "Duration",
+        "timestamp": "Timestamp"
+      }
     }
   },
   "apiKeys": {
@@ -361,6 +397,45 @@
       "error": "Error"
     },
     "sendFailed": "Failed to send message"
+  },
+  "broadcast": {
+    "title": "Broadcast",
+    "subtitle": "Send one message to many recipients, now or scheduled",
+    "compose": "Compose Broadcast",
+    "session": "Session",
+    "noReadySessions": "No ready sessions",
+    "sessionOptionPhoneNone": "No phone",
+    "recipients": "Recipients",
+    "allContacts": "All Contacts",
+    "selectContacts": "Select Contacts",
+    "allContactsHint": "Sends to every non-blocked contact in this session",
+    "loadingContacts": "Loading contacts...",
+    "noContactsFound": "No contacts found",
+    "selectedCount": "{{count}} recipient selected",
+    "selectedCount_other": "{{count}} recipients selected",
+    "messageContent": "Message Content",
+    "messagePlaceholder": "Enter the message to broadcast...",
+    "scheduleForLater": "Schedule for later",
+    "scheduleInPastError": "Scheduled time must be in the future",
+    "sendNow": "Send Now",
+    "schedule": "Schedule Broadcast",
+    "sending": "Sending...",
+    "viewOnly": "View Only",
+    "createSuccess": "Broadcast {{id}} created for {{count}} recipients",
+    "createFailed": "Failed to create broadcast",
+    "history": "Broadcast History",
+    "noBroadcasts": "No broadcasts yet",
+    "progressSent": "{{sent}} / {{total}} sent",
+    "progressFailed": "{{failed}} failed",
+    "cancel": "Cancel",
+    "status": {
+      "pending": "Pending",
+      "scheduled": "Scheduled",
+      "processing": "Sending",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    }
   },
   "infrastructure": {
     "title": "Infrastructure",
@@ -520,6 +595,7 @@
     "statusDisconnected": "Offline",
     "sessionNotReadyTitle": "Session Offline",
     "sessionNotReadyDesc": "The selected session is not active. Please start the session on the Sessions page first.",
+    "goToSessions": "Go to Sessions",
     "searchPlaceholder": "Search chats...",
     "loadingChats": "Loading chats...",
     "noChatsFound": "No chats found",
@@ -530,7 +606,16 @@
     "sendReply": "Send message",
     "noChatSelectedTitle": "Your Conversations",
     "noChatSelectedDesc": "Select a contact or group chat from the sidebar list to inspect historical message logs and reply.",
-    "addEmoji": "Add Emoji",
+    "realtimeDisconnected": "Real-time updates are disconnected — messages may be delayed. Reconnecting...",
+    "insertTemplate": "Insert template",
+    "templatesHeader": "Message templates",
+    "noTemplates": "No templates yet. Create one on the Templates page.",
+    "claim": "Claim",
+    "claimChat": "Claim this chat",
+    "unassign": "Unassign",
+    "unassignChat": "Release this claim",
+    "assignedTo": "Claimed by {{name}}",
+    "assignedToMe": "Claimed by you",
     "mediaType": {
       "image": "Image",
       "video": "Video",
@@ -538,6 +623,69 @@
       "document": "Document",
       "location": "Location Shared",
       "contactCard": "Contact Card"
+    }
+  },
+  "templates": {
+    "title": "Message Templates",
+    "subtitle": "Create reusable quick-reply templates to speed up your responses",
+    "addTemplate": "New Template",
+    "createTitle": "Create Template",
+    "editTitle": "Edit Template",
+    "deleteTitle": "Delete Template",
+    "deleteConfirm": "Are you sure you want to delete this template?",
+    "name": "Name",
+    "namePlaceholder": "e.g., Greeting",
+    "content": "Content",
+    "contentPlaceholder": "Type the message that will be inserted when this template is used...",
+    "saveChanges": "Save Changes",
+    "columns": {
+      "name": "Name",
+      "content": "Content",
+      "actions": "Actions"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "empty": {
+      "title": "No templates created",
+      "description": "Create a template to speed up replies in ChatViewer and Message Tester"
+    },
+    "toasts": {
+      "created": "Template created successfully",
+      "createFailed": "Failed to create template: {{message}}",
+      "updated": "Template updated successfully",
+      "updateFailed": "Failed to update template: {{message}}",
+      "deleted": "Template deleted successfully",
+      "deleteFailed": "Failed to delete template: {{message}}"
+    }
+  },
+  "tags": {
+    "title": "Tags",
+    "subtitle": "Create and manage tags to organize and filter your contacts",
+    "addTag": "New Tag",
+    "createTitle": "Create Tag",
+    "editTitle": "Edit Tag",
+    "deleteTitle": "Delete Tag",
+    "deleteConfirm": "Are you sure you want to delete this tag? It will be removed from any contacts it is assigned to.",
+    "namePlaceholder": "e.g., VIP",
+    "color": "Color",
+    "columns": {
+      "name": "Name",
+      "color": "Color",
+      "created": "Created"
+    },
+    "empty": {
+      "title": "No tags created",
+      "description": "Create a tag to start organizing and filtering your contacts"
+    },
+    "toasts": {
+      "created": "Tag created successfully",
+      "createFailed": "Failed to create tag: {{message}}",
+      "updated": "Tag updated successfully",
+      "updateFailed": "Failed to update tag: {{message}}",
+      "deleted": "Tag deleted successfully",
+      "deleteFailed": "Failed to delete tag: {{message}}"
     }
   }
 }

@@ -195,6 +195,15 @@
   color: var(--text-primary);
 }
 
+.language-select select {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+}
+
 .logout-btn {
   display: flex;
   align-items: center;

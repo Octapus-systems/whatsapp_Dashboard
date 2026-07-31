@@ -4,6 +4,7 @@ import { MessageSquare, Send, Webhook, Activity, ArrowUpRight, ArrowDownRight, L
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useSessionsQuery, useSessionStatsQuery, useWebhooksQuery, useStopSessionMutation } from '../hooks/queries';
 import { PageHeader } from '../components/PageHeader';
+import { AnalyticsCharts } from '../components/AnalyticsCharts';
 import './Dashboard.css';
 
 export function Dashboard() {
@@ -105,6 +106,8 @@ export function Dashboard() {
           </div>
         ))}
       </div>
+
+      <AnalyticsCharts />
 
       <section className="sessions-section">
         <div className="section-header">

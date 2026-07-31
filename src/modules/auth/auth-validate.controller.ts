@@ -16,7 +16,7 @@ export class AuthValidateController {
   @ApiHeader({ name: 'X-API-Key', description: 'API key to validate' })
   @ApiResponse({ status: 200, description: 'API key is valid' })
   @ApiResponse({ status: 401, description: 'Invalid or missing API key' })
-  async validate(@Headers('x-api-key') apiKey?: string): Promise<{ valid: boolean; role?: string }> {
+  async validate(@Headers('x-api-key') apiKey?: string): Promise<{ valid: boolean; role?: string; name?: string }> {
     if (!apiKey) {
       throw new UnauthorizedException('API key is required');
     }
@@ -24,13 +24,13 @@ export class AuthValidateController {
     // Check if this is the master key — it bypasses the DB and is always admin
     const masterKey = process.env.API_MASTER_KEY;
     if (masterKey && apiKey === masterKey) {
-      return { valid: true, role: 'admin' };
+      return { valid: true, role: 'admin', name: 'Master Key' };
     }
 
     try {
       const keyEntity = await this.authService.validateApiKey(apiKey);
       if (keyEntity && keyEntity.isActive) {
-        return { valid: true, role: keyEntity.role };
+        return { valid: true, role: keyEntity.role, name: keyEntity.name };
       }
       throw new UnauthorizedException('Invalid or inactive API key');
     } catch (error) {
