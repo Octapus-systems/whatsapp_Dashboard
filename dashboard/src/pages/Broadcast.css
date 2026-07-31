@@ -211,7 +211,7 @@
 }
 
 .result-banner.success {
-  background: rgba(37, 211, 102, 0.1);
+  background: rgba(56, 189, 248, 0.1);
   color: var(--primary);
 }
 
@@ -284,7 +284,7 @@
 }
 
 .status-completed {
-  background: rgba(37, 211, 102, 0.15);
+  background: rgba(56, 189, 248, 0.15);
   color: var(--primary);
 }
 

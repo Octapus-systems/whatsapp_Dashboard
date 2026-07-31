@@ -26,7 +26,7 @@
 }
 
 .status-badge.connected {
-  background: rgba(37, 211, 102, 0.1);
+  background: rgba(56, 189, 248, 0.1);
   color: var(--primary);
 }
 
@@ -218,7 +218,7 @@
 }
 
 .status-pill.ready {
-  background: rgba(37, 211, 102, 0.1);
+  background: rgba(56, 189, 248, 0.1);
   color: var(--primary);
 }
 

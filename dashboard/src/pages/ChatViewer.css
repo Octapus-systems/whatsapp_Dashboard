@@ -55,7 +55,7 @@
 }
 
 .session-status-badge.ready {
-  background: rgba(37, 211, 102, 0.12);
+  background: rgba(56, 189, 248, 0.12);
   color: #10B981;
 }
 
@@ -221,7 +221,7 @@
 }
 
 .chat-item-btn.active {
-  background: rgba(37, 211, 102, 0.08); /* Wirebot brand green glow */
+  background: rgba(56, 189, 248, 0.08); /* Wirebot brand green glow */
   border-left: 3px solid var(--primary);
 }
 
@@ -462,14 +462,14 @@
   background: #DCF8C6; /* Classic WhatsApp outward bubble */
   color: #1E293B;
   border-top-right-radius: 2px;
-  border: 1px solid rgba(37, 211, 102, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.15);
 }
 
 /* Dark mode override for outward bubbles */
 [data-theme="dark"] .outgoing .message-bubble {
-  background: rgba(37, 211, 102, 0.2);
+  background: rgba(56, 189, 248, 0.2);
   color: #F8FAFC;
-  border-color: rgba(37, 211, 102, 0.3);
+  border-color: rgba(56, 189, 248, 0.3);
 }
 
 .bubble-sender {

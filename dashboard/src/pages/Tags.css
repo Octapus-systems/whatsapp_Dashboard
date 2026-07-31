@@ -51,7 +51,7 @@
 }
 
 .tags-table .table-row:not(.header):hover {
-  background: rgba(37, 211, 102, 0.05);
+  background: rgba(56, 189, 248, 0.05);
 }
 
 .tags-table .table-row:not(.header):nth-child(even) {

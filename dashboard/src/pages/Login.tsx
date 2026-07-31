@@ -44,7 +44,7 @@ export function Login({ onLogin }: LoginProps) {
     <div className="login-container">
       <div className="login-card">
         <div className="login-logo">
-          <img src="/wirebot_logo.webp" alt="Wirebot" className="logo-icon" />
+          <img src="/wirebot_logo.png" alt="Wirebot" className="logo-icon" />
           <span className="version-info">
             {t('login.version', {
               version: __APP_VERSION__,
