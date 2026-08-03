@@ -3,15 +3,15 @@ import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 
-export interface OpenwaStackProps extends cdk.StackProps {
+export interface WirebotStackProps extends cdk.StackProps {
   /** CIDR allowed to reach SSH (port 22). Restrict this to your own IP. */
   sshAllowedCidr: string;
   /** GitHub repo to clone on boot. */
   repoUrl: string;
 }
 
-export class OpenwaStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: OpenwaStackProps) {
+export class WirebotStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: WirebotStackProps) {
     super(scope, id, props);
 
     // Default VPC — no NAT gateway, avoids hourly NAT charges.
