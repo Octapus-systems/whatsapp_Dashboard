@@ -314,6 +314,6 @@ See [LICENSE](./LICENSE) for details.
 
 <br/>
 
-<sub>Made with ❤️ by <a href="https://github.com/jishad">Jishad</a> and the Wirebot Community</sub>
+<sub>Made with ❤️ by <a href="https://github.com/jishad">Octapus</a> and the Wirebot Community</sub>
 
 </div>

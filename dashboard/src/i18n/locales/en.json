@@ -82,7 +82,7 @@
     "connectionError": "Unable to connect to server. Please try again.",
     "help": "Need help?",
     "viewDocs": "View Documentation",
-    "footer": "Made with ❤️ by Jishad and the Wirebot Community",
+    "footer": "Made with ❤️ by Octapus and the Wirebot Community",
     "version": "v{{version}} · {{date}}"
   },
   "dashboard": {

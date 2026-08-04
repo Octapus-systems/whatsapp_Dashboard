@@ -2,7 +2,7 @@
   "name": "wirebot",
   "version": "0.1.6",
   "description": "Open Source WhatsApp API Gateway - Free, Self-Hosted HTTP API for WhatsApp",
-  "author": "Jishad & Wirebot Contributors",
+  "author": "Octapus & Wirebot Contributors",
   "private": true,
   "license": "MIT",
   "scripts": {
